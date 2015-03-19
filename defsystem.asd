@@ -12,10 +12,14 @@
   :depends-on (:cffi)
   :serial t
   :components ((:file "package")
-	       (cffi-grovel:grovel-file "libnuma-grovelling")
-	       (:file "libnuma")))
+	       (:file "library")
+	       (cffi-grovel:grovel-file "grovelling")
+	       (cffi-grovel:wrapper-file "wrapping")
+	       (:file "binding")
+	       (:file "api")))
 
-;; This packaging is suspicious!!!!
-(defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma)) &rest args &key allow-other-keys)
+(defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma)) &rest args &key &allow-other-keys)
   (declare (ignore args))
-  (cffi:use-foreign-library cl-libnuma::libnuma))
+  (unless (zerop (uiop:symbol-call :cl-libnuma '#:numa-available))
+    (warn "libnuma is unavailable in this system. ~
+All functions without numa-avaliable are undefined.")))
