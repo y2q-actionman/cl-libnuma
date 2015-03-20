@@ -24,6 +24,8 @@
     :int)
 
 (defcfun "numa_num_possible_cpus" ; BUG: This does not exist at the top of man page, and has no explanations!
+    ;; This is not exported until libnuma-2.0.8-rc4
+    ;; http://www.spinics.net/lists/linux-numa/msg00948.html
     :int)
 
 
@@ -172,10 +174,12 @@
   (size size_t))
 
 
+;; TODO: This retval is libc-semantics.
 (defcfun "numa_run_on_node"
     :int
   (node :int))
 
+;; TODO: This retval is libc-semantics.
 (defcfun "numa_run_on_node_mask"
     :int
   (nodemask struct-bitmask-pointer))
@@ -225,6 +229,7 @@
   (node2 :int))
 
 
+;; TODO: wrap memory management.
 (defcfun "numa_sched_getaffinity"
     :int
   (pid pid_t)
@@ -235,11 +240,15 @@
   (pid pid_t)
   (mask struct-bitmask-pointer))
 
+;; TODO: This retval is libc-semantics.
+;; TODO: wrap memory management.
+;; BUG: manpage don't highlight numa_allocate_cpumask()
 (defcfun "numa_node_to_cpus"
     :int
   (node :int)
   (mask struct-bitmask-pointer))
 
+;; TODO: This retval is libc-semantics.
 (defcfun "numa_node_of_cpu"
     :int
   (cpu :int))
@@ -365,5 +374,6 @@
 ;; numa_warn() is intended to be overriden
 
 
-(defcfun "numa_pagesize"		; not documented
+;; source says 'not documented', and don't appear at the top of manpage, but description is found!
+(defcfun "numa_pagesize"
     :int)

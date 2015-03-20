@@ -4,9 +4,14 @@
 
 - [ ] Enable to set a callback for numa_error() and numa_warn().
 
+- [ ] checks libc-semantic return values. 
+
 * enhancement
 
 - [ ] Introduce 'bitmask' defclass.
+  And more, 'nodemask' or 'cpumask' class?
+
+- [ ] Prints appropriate messages when libnuma headers are not found.
 
 
 * additional features
@@ -16,3 +21,6 @@
 
 - [ ] Import errno?
   numa-move-pages returns an array filled with errno.
+
+- [ ] checks libnuma version?
+  for numa-num-possible-cpus
