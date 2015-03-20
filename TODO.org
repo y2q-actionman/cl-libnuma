@@ -1,0 +1,18 @@
+# -*- mode: org; -*-
+
+* not implemented features
+
+- [ ] Enable to set a callback for numa_error() and numa_warn().
+
+* enhancement
+
+- [ ] Introduce 'bitmask' defclass.
+
+
+* additional features
+
+- [ ] Should I make 'getpid' ready?
+  or, check interoperability with excl.osi, etc.
+
+- [ ] Import errno?
+  numa-move-pages returns an array filled with errno.

@@ -1,16 +1,20 @@
 (in-package :cl-libnuma)
 
+(defconstant +cl-libnuma-target-api-version+ 2)
+
+
 (defctype struct-bitmask-pointer
     (:pointer (:struct struct-bitmask)))
 
 (defctype nodemask_t-pointer
     (:pointer (:struct nodemask_t)))
 
-;; TODO: (deftype numa-node?
 
-
-(defcfun "numa_available"		; TODO: boolean
+(defcfun (numa-available* "numa_available")
     :int)
+
+(defun numa-available ()
+  (zerop (numa-available*)))
 
 
 (defcfun "numa_max_possible_node"
@@ -75,15 +79,25 @@
   (string :string))
 
 
-(defcfun "numa_node_size"		; TODO: &optional, or multiple values
+(defcfun (numa-node-size* "numa_node_size")
     :long
   (node :int)
   (freep (:pointer :long)))
 
-(defcfun "numa_node_size64"		; TODO: &optional, or multiple values
+(defun numa-node-size (node)
+  (with-foreign-object (freep :long 1)
+    (let ((size (numa-node-size* node freep)))
+      (values size (mem-aref freep :long 0)))))
+  
+(defcfun (numa-node-size64* "numa_node_size64")
     :long-long
   (node :int)
   (freep (:pointer :long-long)))
+
+(defun numa-node-size64 (node)
+  (with-foreign-object (freep :long-long 1)
+    (let ((size (numa-node-size64* node freep)))
+      (values size (mem-aref freep :long-long 0)))))
 
 
 (defcfun "numa_preferred"
@@ -256,7 +270,7 @@
   (n :unsigned-int))
 
 (defcfun "numa_bitmask_equal"
-    :int			     ; should be defined as a boolean? :boolean?
+    (:boolean :int)
   (bmp1 struct-bitmask-pointer)
   (bmp2 struct-bitmask-pointer))
 
@@ -265,7 +279,7 @@
   (bmp struct-bitmask-pointer))
 
 (defcfun "numa_bitmask_isbitset"
-    :int			     ; should be defined as a boolean? :boolean?
+    (:boolean :int)
   (bmp struct-bitmask-pointer)
   (n :unsigned-int))
 
@@ -302,7 +316,7 @@
   (bmp struct-bitmask-pointer))
 
 
-(defcfun "numa_move_pages"
+(defcfun (numa-move-pages* "numa_move_pages")
     :int
   (pid :int)
   (count :unsigned-long)
@@ -310,6 +324,28 @@
   (nodes (:pointer :int))
   (status (:pointer :int))
   (flags :int))
+
+(defun numa-move-pages (pid count pages-list nodes-list &optional (flags MPOL_MF_MOVE))
+  (let ((pages-list-length (length pages-list))
+	(nodes-list-length (length nodes-list)))
+    (with-foreign-object (pages-array :pointer pages-list-length)
+      (loop for i from 0
+	 for p in pages-list
+	 do (setf (mem-aref pages-array :pointer i) p))
+      (with-foreign-object (nodes-array :int nodes-list-length)
+	(loop for i from 0
+	   for n in nodes-list
+	   do (setf (mem-aref nodes-array :int i) n))
+	(with-foreign-object (status-array :int pages-list-length)
+	  (let ((ret (numa-move-pages* pid count pages-array nodes-array
+				       status-array flags)))
+	    (case ret
+	      (-1 (values ret nil))
+	      (0 (values ret
+			 (loop for i from 0 below pages-list-length
+			    collect (mem-aref status-array :int i))))
+	      (t (error "numa_move_pages returned an unexpected value ~D" ret)))))))))
+	  
 
 (defcfun "numa_migrate_pages"
     :int
@@ -320,19 +356,14 @@
 
 ;; numa_error() is intended to be overriden
 
-(defcvar "numa_exit_on_error"		; :boolean?
-    :int)
+(defcvar "numa_exit_on_error"
+    (:boolean :int))
 
-(defcvar "numa_exit_on_warn"		; :boolean?
-    :int)
+(defcvar "numa_exit_on_warn"
+    (:boolean :int))
 
 ;; numa_warn() is intended to be overriden
 
 
 (defcfun "numa_pagesize"		; not documented
     :int)
-
-
-;; TODO:
-;; - Should I make 'getpid' ready?
-;; - Should I assert 'LIBNUMA_API_VERSION == 2' ?

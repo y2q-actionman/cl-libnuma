@@ -16,10 +16,13 @@
 	       (cffi-grovel:grovel-file "grovelling")
 	       (cffi-grovel:wrapper-file "wrapping")
 	       (:file "binding")
-	       (:file "api")))
+	       (:file "lisp-api")))
 
 (defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma)) &rest args &key &allow-other-keys)
   (declare (ignore args))
-  (unless (zerop (uiop:symbol-call :cl-libnuma '#:numa-available))
+  (when (/= (symbol-value (find-symbol "LIBNUMA_API_VERSION" :cl-libnuma.grovel))
+	    (symbol-value (find-symbol "+CL-LIBNUMA-TARGET-API-VERSION+" :cl-libnuma)))
+    (warn "libnuma is newer than cl-libnuma implemented"))
+  (unless (uiop:symbol-call :cl-libnuma '#:numa-available)
     (warn "libnuma is unavailable in this system. ~
 All functions without numa-avaliable are undefined.")))

@@ -22,6 +22,8 @@
 	:cl-libnuma.grovel
 	:cl-libnuma.wrapper)
   (:export
+   #:+cl-libnuma-target-api-version+
+
    ;; library name
    #:libnuma
 
@@ -113,6 +115,7 @@
    #:numa-bitmask-weight
 
    #:numa-move-pages
+   #:numa-move-pages*
    #:numa-migrate-pages
 
    ;; numa-error
@@ -126,6 +129,7 @@
    #:MPOL_MF_MOVE_ALL
 
 
-   ;; cl-libnuma API
-   #:with-temporal-bitmask
+   ;; Lisp API
+   #:predefined-bitmask-p
+   #:with-freeing-bitmask
    ))
