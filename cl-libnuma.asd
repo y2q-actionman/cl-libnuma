@@ -10,13 +10,16 @@
   ;; :license "GNU Lesser GPL v 2.1"  ; == same as libnuma ???
   ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cffi)
-  :serial t
-  :components ((:file "package")
-	       (:file "library")
-	       (cffi-grovel:grovel-file "grovelling")
-	       (cffi-grovel:wrapper-file "wrapping")
-	       (:file "binding")
-	       (:file "lisp-api")))
+  :components
+  ((:module "src"
+    :serial t
+    :components
+    ((:file "package")
+     (:file "library")
+     (cffi-grovel:grovel-file "grovelling")
+     (cffi-grovel:wrapper-file "wrapping")
+     (:file "binding")
+     (:file "lisp-api")))))
 
 (defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma)) &rest args &key &allow-other-keys)
   (declare (ignore args))
