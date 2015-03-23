@@ -1,8 +1,3 @@
-(in-package :cl-user)
-
-(defpackage :cl-libnuma-test
-  (:use :cl :cl-libnuma))
-
 (in-package :cl-libnuma-test)
 
 (defvar *nodes* (numa-num-configured-nodes))
@@ -27,17 +22,17 @@
 (defun print-current-status ()
   (fresh-line)
 
-  (format t "available = ~A~%" (numa-available))
+  (format t "numa-available = ~A~%" (numa-available))
   (terpri)
 
-  (format t "max-possible-node = ~A~%" (numa-max-possible-node))
-  (format t "num-possible-nodes = ~A~%" (numa-num-possible-nodes))
-  ;; (format t "num-possible-cpus = ~A~%" (numa-num-possible-cpus))
+  (format t "numa-max-possible-node = ~A~%" (numa-max-possible-node))
+  (format t "numa-num-possible-nodes = ~A~%" (numa-num-possible-nodes))
+  (format t "numa-num-possible-cpus = ~A~%" (numa-num-possible-cpus))
   (terpri)
 
   (format t "numa-max-node = ~A~%" (numa-max-node))
-  (format t "num-configured-nodes = ~A~%" (numa-num-configured-nodes))
-  (format t "num-get-mems-allowed = ")
+  (format t "numa-num-configured-nodes = ~A~%" (numa-num-configured-nodes))
+  (format t "numa-num-get-mems-allowed = ")
   (with-freeing-bitmask (bitmask (numa-get-mems-allowed))
     (print-bitmask bitmask :node))
   (terpri)
@@ -113,13 +108,13 @@
        do (print-bitmask bitmask :cpu)))
   (terpri)
   (format t "numa-node-of-cpu~%")
-  (loop for i from 0 below *cpus* by 5
+  (loop for i from 0 below *cpus* by 10
      do (loop with j-from = i
-	   with j-to = (+ i 4)
+	   with j-to = (+ i 9)
 	   initially (format t "~& [~2D-~2D] " j-from j-to)
 	   for j from j-from to j-to
 	   as node = (numa-node-of-cpu j)
-	   unless (minusp node)
+	   until (minusp node)
 	   do (format t "~2D " node)))
   (terpri)
   (terpri)

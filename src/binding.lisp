@@ -9,12 +9,21 @@
 (defctype nodemask_t-pointer
     (:pointer (:struct nodemask_t)))
 
+(defun lisp-to-libc-return-boolean (value)
+  (if value 0 -1))
 
-(defcfun (numa-available* "numa_available")
-    :int)
+(defun lisp-from-libc-return-boolean (value)
+  (declare (type fixnum value))
+  (>= value 0))
 
-(defun numa-available ()
-  (zerop (numa-available*)))
+(defctype libc-return-boolean 
+    (:wrapper :int
+	      :to-c lisp-to-libc-return-boolean
+	      :from-c lisp-from-libc-return-boolean))
+
+
+(defcfun "numa_available"
+    libc-return-boolean)
 
 
 (defcfun "numa_max_possible_node"
@@ -23,10 +32,30 @@
 (defcfun "numa_num_possible_nodes"
     :int)
 
-(defcfun "numa_num_possible_cpus" ; BUG: This does not exist at the top of man page, and has no explanations!
-    ;; This is not exported until libnuma-2.0.8-rc4
-    ;; http://www.spinics.net/lists/linux-numa/msg00948.html
+;; BUG: This does not exist at the top of man page, and has no explanations!
+;; BUG: This is not exported until libnuma-2.0.8-rc4
+;; http://www.spinics.net/lists/linux-numa/msg00948.html
+(defcfun (numa-num-possible-cpus* "numa_num_possible_cpus")
     :int)
+
+(let ((possible-cpus nil))
+  (defun numa-num-possible-cpus-alternative ()
+    (unless possible-cpus
+      ;; Get the value from an allocated cpumask.
+      (let ((bmp (numa-allocate-cpumask)))
+	(unwind-protect
+	     (setf possible-cpus
+		   (progn (numa-bitmask-setall bmp)
+			  (numa-bitmask-weight bmp)))
+	  (numa-bitmask-free bmp))))
+    possible-cpus))
+
+(defun numa-num-possible-cpus ()
+  (handler-case (numa-num-possible-cpus*)
+    ;; This code assumes a simple-error is reported when the function is not exported.
+    (simple-error (condition)
+      (declare (ignore condition))
+      (numa-num-possible-cpus-alternative))))
 
 
 (defcfun "numa_max_node"
@@ -60,7 +89,7 @@
 
 
 (defcfun "numa_parse_bitmap"
-    :int
+    libc-return-boolean
   (line :string)
   (mask struct-bitmask-pointer))
 
@@ -174,18 +203,16 @@
   (size size_t))
 
 
-;; TODO: This retval is libc-semantics.
 (defcfun "numa_run_on_node"
-    :int
+    libc-return-boolean
   (node :int))
 
-;; TODO: This retval is libc-semantics.
 (defcfun "numa_run_on_node_mask"
-    :int
+    libc-return-boolean
   (nodemask struct-bitmask-pointer))
 
 (defcfun "numa_run_on_node_mask_all"
-    :int
+    libc-return-boolean
   (nodemask struct-bitmask-pointer))
 
 (defcfun "numa_get_run_node_mask"
@@ -231,20 +258,19 @@
 
 ;; TODO: wrap memory management.
 (defcfun "numa_sched_getaffinity"
-    :int
+    libc-return-boolean
   (pid pid_t)
   (mask struct-bitmask-pointer))
 
 (defcfun "numa_sched_setaffinity"
-    :int
+    libc-return-boolean
   (pid pid_t)
   (mask struct-bitmask-pointer))
 
-;; TODO: This retval is libc-semantics.
-;; TODO: wrap memory management.
+;; TODO: wrap memory management. This should return a bitmask.
 ;; BUG: manpage don't highlight numa_allocate_cpumask()
 (defcfun "numa_node_to_cpus"
-    :int
+    libc-return-boolean
   (node :int)
   (mask struct-bitmask-pointer))
 
@@ -357,7 +383,7 @@
 	  
 
 (defcfun "numa_migrate_pages"
-    :int
+    libc-return-boolean
   (pid :int)
   (fromnodes struct-bitmask-pointer)
   (tonodes struct-bitmask-pointer))
