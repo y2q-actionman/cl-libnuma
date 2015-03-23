@@ -10,6 +10,19 @@
 
 - [ ] Introduce 'bitmask' defclass.
   And more, 'nodemask' or 'cpumask' class?
+  Or, List?
+
+#+BEGIN_SRC lisp
+(defun translate-bitmask-to-list (bitmask bitmask-size)
+  (loop for i from 0 below bitmask-size
+     when (numa-bitmask-isbitset bitmask i)
+     collect i))
+
+(defun node-to-cpus-as-list (node)
+  (with-freeing-bitmask (bitmask (numa-allocate-cpumask))
+    (numa-node-to-cpus node bitmask)
+    (translate-bitmask-to-list bitmask (numa-num-configured-cpus))))
+#+END_SRC
 
 - [ ] Prints appropriate messages when libnuma headers are not found.
 

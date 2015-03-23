@@ -1,4 +1,9 @@
-(in-package :cl-libnuma-test)
+(in-package :cl-user)
+
+(defpackage :cl-libnuma-test-print
+  (:use :cl :cl-libnuma))
+
+(in-package :cl-libnuma-test-print)
 
 (defvar *nodes* (numa-num-configured-nodes))
 (defvar *cpus* (numa-num-task-cpus))	; because numa-num-configured-cpus is not found..
