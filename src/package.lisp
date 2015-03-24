@@ -29,6 +29,8 @@
 
    ;; types
    #:struct-bitmask-pointer
+   #:bitmask-type
+   #:bitmask
    #:nodemask_t-pointer
 
    ;; numa(3) API
@@ -43,9 +45,9 @@
    #:numa-get-mems-allowed
    
    #:numa-num-configured-cpus
-   #:*numa-all-nodes-ptr*
-   #:*numa-no-nodes-ptr*
-   #:*numa-all-cpus-ptr*
+   #:*numa-all-nodes*
+   #:*numa-no-nodes*
+   #:*numa-all-cpus*
 
    #:numa-num-task-cpus
    #:numa-num-task-nodes
