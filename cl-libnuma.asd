@@ -18,8 +18,7 @@
      (:file "library")
      (cffi-grovel:grovel-file "grovelling")
      (cffi-grovel:wrapper-file "wrapping")
-     (:file "binding")
-     (:file "lisp-api")))))
+     (:file "binding")))))
 
 (defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma)) &rest args &key &allow-other-keys)
   (declare (ignore args))

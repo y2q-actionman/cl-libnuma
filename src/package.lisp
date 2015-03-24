@@ -14,8 +14,8 @@
 (defpackage :cl-libnuma.wrapper
   (:use)
   (:export
-   #:numa-free-cpumask
-   #:numa-free-nodemask))
+   #:numa-free-cpumask*
+   #:numa-free-nodemask*))
 
 (defpackage :cl-libnuma
   (:use :cl :cffi
@@ -33,11 +33,15 @@
    #:bitmask
    #:nodemask_t-pointer
 
+   ;; utils
+   #:with-temporal-struct-bitmask-pointer
+
    ;; numa(3) API
    #:numa-available
 
    #:numa-max-possible-node
    #:numa-num-possible-nodes
+   #:numa-num-possible-cpus*
    #:numa-num-possible-cpus
 
    #:numa-max-node
@@ -52,13 +56,16 @@
    #:numa-num-task-cpus
    #:numa-num-task-nodes
 
+   #:numa-parse-bitmap*
    #:numa-parse-bitmap
    #:numa-parse-nodestring
    #:numa-parse-nodestring-all
    #:numa-parse-cpustring
    #:numa-parse-cpustring-all
 
+   #:numa-node-size*
    #:numa-node-size
+   #:numa-node-size64*
    #:numa-node-size64
 
    #:numa-preferred
@@ -94,30 +101,32 @@
 
    #:numa-distance
 
+   #:numa-sched-getaffinity*
    #:numa-sched-getaffinity
    #:numa-sched-setaffinity
+   #:numa-node-to-cpus*
    #:numa-node-to-cpus
    #:numa-node-of-cpu
 
-   #:numa-allocate-cpumask
-   #:numa-allocate-nodemask
+   #:numa-allocate-cpumask*
+   #:numa-allocate-nodemask*
 
-   #:numa-bitmask-alloc
-   #:numa-bitmask-clearall
-   #:numa-bitmask-clearbit
-   #:numa-bitmask-equal
-   #:numa-bitmask-free
-   #:numa-bitmask-isbitset
-   #:numa-bitmask-nbytes
-   #:numa-bitmask-setall
-   #:numa-bitmask-setbit
-   #:copy-bitmask-to-nodemask
-   #:copy-nodemask-to-bitmask
-   #:copy-bitmask-to-bitmask
-   #:numa-bitmask-weight
+   #:numa-bitmask-alloc*
+   #:numa-bitmask-clearall*
+   #:numa-bitmask-clearbit*
+   #:numa-bitmask-equal*
+   #:numa-bitmask-free*
+   #:numa-bitmask-isbitset*
+   #:numa-bitmask-nbytes*
+   #:numa-bitmask-setall*
+   #:numa-bitmask-setbit*
+   #:copy-bitmask-to-nodemask*
+   #:copy-nodemask-to-bitmask*
+   #:copy-bitmask-to-bitmask*
+   #:numa-bitmask-weight*
 
-   #:numa-move-pages
    #:numa-move-pages*
+   #:numa-move-pages
    #:numa-migrate-pages
 
    ;; numa-error
@@ -127,11 +136,9 @@
 
    #:numa-pagesize
 
+   ;; re-export
    #:MPOL_MF_MOVE
    #:MPOL_MF_MOVE_ALL
-
-
-   ;; Lisp API
-   #:predefined-bitmask-p
-   #:with-freeing-bitmask
+   #:numa-free-cpumask*
+   #:numa-free-nodemask*
    ))

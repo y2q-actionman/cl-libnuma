@@ -21,8 +21,9 @@
 	 (procs))
     (unwind-protect
 	 (flet ((worker-function (node mem)
-		  (format t "~&I am node=~A, mem=~A~%" node mem)
 		  (numa-run-on-node node)
+		  (format t "~&I am node=~A, mem=~A~%"
+			  (numa-get-run-node-mask) mem)
 		  ;; zero fill
 		  (loop for pos from 0 below *allocation-size*
 		     do (setf (system:memref-int mem 0 pos :unsigned-byte) 0))
@@ -37,7 +38,8 @@
 			  sum (system:memref-int mem 0 pos :unsigned-byte)
 			  into result
 			  finally
-			    (format t "~&I am node=~A, mem=~A, loop ~A~%" node mem lc)
+			    (format t "~&I am node=~A, mem=~A, loop ~A~%"
+				    (numa-get-run-node-mask) mem lc)
 			    (format t "~& result = ~A~%" result)))))
 	   (loop for n from 0 below nodes
 	      do (push (mp:process-run-function

@@ -12,18 +12,6 @@
   #+allegro(excl.osi:getpid)
   #-allegro(error "gomen"))
 
-(defun print-bitmask (bitmask type)
-  (flet ((print-bitmask-with-range (range)
-	   (loop for i from 0 below range
-	      as set? = (numa-bitmask-isbitset bitmask i)
-	      do (write-char (if set? #\X #\_))
-	      when (= 4 (mod i 5))
-	      do (write-char #\space))))
-    (case type
-      (:cpu (print-bitmask-with-range (numa-num-configured-cpus)))
-      (:node (print-bitmask-with-range (numa-num-configured-nodes)))
-      (t (print-bitmask-with-range (* 8 (numa-bitmask-nbytes bitmask)))))))
-
 (defun print-current-status ()
   (fresh-line)
 
@@ -42,8 +30,8 @@
 
   (format t "numa-num-configured-cpus = ~A~%" (numa-num-configured-cpus))
   (format t "*numa-all-nodes* = ~A~%" *numa-all-nodes*)
-  (format t "*numa-no-nodes* = ~A~%" *numa-no-nodes-ptr*)
-  (format t "*numa-all-cpus-ptr* = ~A~%" *numa-all-cpus-ptr*)
+  (format t "*numa-no-nodes* = ~A~%" *numa-no-nodes*)
+  (format t "*numa-all-cpus-ptr* = ~A~%" *numa-all-cpus*)
   (terpri)
 
   (format t "numa-num-task-cpus = ~A~%" (numa-num-task-cpus))
@@ -82,17 +70,10 @@
   (terpri)
 
   (format t "numa-sched-getaffinity for this process (~D) ~%" (getpid))
-  (with-freeing-bitmask (bitmask (numa-allocate-cpumask))
-    (numa-sched-getaffinity (getpid) bitmask)
-    (format t "  ")
-    (print-bitmask bitmask :cpu))
-  (terpri)
+  (format t "  ~A~%" (numa-sched-getaffinity (getpid)))
   (format t "numa-node-to-cpus")
-  (with-freeing-bitmask (bitmask (numa-allocate-cpumask))
-    (loop for i from 0 below *nodes*
-       do (format t "~& node ~2D " i)
-       do (numa-node-to-cpus i bitmask)
-       do (print-bitmask bitmask :cpu)))
+  (loop for i from 0 below *nodes*
+     do (format t "~& node ~2D ~A" i (numa-node-to-cpus i)))
   (terpri)
   (format t "numa-node-of-cpu~%")
   (loop for i from 0 below *cpus* by 10
@@ -101,7 +82,7 @@
 	   initially (format t "~& [~2D-~2D] " j-from j-to)
 	   for j from j-from to j-to
 	   as node = (numa-node-of-cpu j)
-	   until (minusp node)
+	   while node
 	   do (format t "~2D " node)))
   (terpri)
   (terpri)

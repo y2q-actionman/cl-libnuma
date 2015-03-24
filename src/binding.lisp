@@ -4,7 +4,7 @@
 
 ;;; Types
 
-;; A representation for 'struct bitmask'
+;; A representation of 'struct bitmask'
 (defctype struct-bitmask-pointer
     (:pointer (:struct struct-bitmask)))
 
@@ -26,15 +26,17 @@
 
 (defmethod translate-to-foreign (lisp-bitmask (type bitmask-type))
   (let ((bmp (case (bitmask-type-specifying type)
-	       (:cpu (numa-allocate-cpumask))
-	       (:node (numa-allocate-nodemask))
-	       (t (numa-bitmask-alloc (bitmask-enough-size))))))
+	       (:cpu (numa-allocate-cpumask*))
+	       (:node (numa-allocate-nodemask*))
+	       (t (numa-bitmask-alloc* (bitmask-enough-size))))))
     (loop for i across lisp-bitmask
        when (plusp i)
-       do (numa-bitmask-setbit bmp i))
+       do (numa-bitmask-setbit* bmp i))
     bmp))
 
 (defmethod translate-from-foreign (bmp (type bitmask-type))
+  (when (null-pointer-p bmp)		; 'bmp' may be null if numa_parse_***() calls.
+    (return-from translate-from-foreign nil))
   (let* ((size (case (bitmask-type-specifying type)
 		 (:cpu (numa-num-configured-cpus))
 		 (:node (numa-num-configured-nodes))
@@ -42,26 +44,30 @@
 	 (lisp-bitmask (make-array `(,size) :element-type 'bit
 				   :initial-element 0))) ; follows numa_bitmask_alloc()
     (loop for i from 0 below size
-       when (numa-bitmask-isbitset bmp i)
-       do (setf (aref lisp-bitmask i) 1))
+       do (setf (aref lisp-bitmask i)
+		(numa-bitmask-isbitset* bmp i)))
     lisp-bitmask))
 
 (defmethod free-translated-object (bmp (type bitmask-type) param)
   (declare (ignore param))
   (case (bitmask-type-specifying type)
-    (:cpu (numa-free-cpumask bmp))
-    (:node (numa-free-nodemask bmp))
-    (t (numa-bitmask-free bmp))))
+    (:cpu (numa-free-cpumask* bmp))
+    (:node (numa-free-nodemask* bmp))
+    (t (numa-bitmask-free* bmp))))
 
 
-;; A representation for 'nodemask_t'
+;; A representation of 'nodemask_t'
+;; (This is an old interface, so I don't implement anything around it..)
 (defctype nodemask_t-pointer
     (:pointer (:struct nodemask_t)))
 
 
-;; A representation for 'int' returned from libc.
-(defun lisp-to-libc-return-boolean (value)
-  (if value 0 -1))
+;; A representation of 'int' returned from libc.
+(defun lisp-to-libc-return-*** (value)
+  (assert nil
+	  ()
+	  "lisp-to-libc-return-*** should not be called (with ~A)"
+	  value))
 
 (defun lisp-from-libc-return-boolean (value)
   (declare (type fixnum value))
@@ -69,8 +75,25 @@
 
 (defctype libc-return-boolean 
     (:wrapper :int
-	      :to-c lisp-to-libc-return-boolean
+	      :to-c lisp-to-libc-return-***
 	      :from-c lisp-from-libc-return-boolean))
+
+(defun lisp-from-libc-return-int (value)
+  (declare (type fixnum value))
+  (if (>= value 0) value nil))
+
+(defctype libc-return-int
+    (:wrapper :int
+	      :to-c lisp-to-libc-return-***
+	      :from-c lisp-from-libc-return-int))
+
+
+;;; Utils
+
+(defmacro with-temporal-struct-bitmask-pointer ((var form) &body body)
+  `(let ((,var ,form))
+     (unwind-protect (progn ,@body)
+       (numa-bitmask-free* ,var))))
 
 
 ;;; Funtions
@@ -92,16 +115,13 @@
 ;; A workaround for numa_num_possible_cpus(), which is not exported
 ;; until libnuma-2.0.8-rc4.
 ;; ( http://www.spinics.net/lists/linux-numa/msg00948.html )
+;; Get the value from an allocated cpumask.
 (let ((possible-cpus nil))
   (defun numa-num-possible-cpus-alternative ()
     (unless possible-cpus
-      ;; Get the value from an allocated cpumask.
-      (let ((bmp (numa-allocate-cpumask)))
-	(unwind-protect
-	     (setf possible-cpus
-		   (progn (numa-bitmask-setall bmp)
-			  (numa-bitmask-weight bmp)))
-	  (numa-bitmask-free bmp))))
+      (with-temporal-struct-bitmask-pointer (bmp (numa-allocate-cpumask*))
+	(setf possible-cpus
+	      (numa-bitmask-weight* (numa-bitmask-setall* bmp)))))
     possible-cpus))
 
 (defun numa-num-possible-cpus ()
@@ -142,11 +162,15 @@
     :int)
 
 
-;; TODO: wrap memory management
-(defcfun "numa_parse_bitmap"
+(defcfun (numa-parse-bitmap* "numa_parse_bitmap")
     libc-return-boolean
   (line :string)
   (mask struct-bitmask-pointer))
+
+(defun numa-parse-bitmap (line)
+  (with-temporal-struct-bitmask-pointer (cpumask (numa-allocate-cpumask*))
+    (if (numa-parse-bitmap* line cpumask)
+	(convert-from-foreign cpumask '(bitmask-type :specifying :cpu)))))
 
 (defcfun "numa_parse_nodestring"
     (bitmask-type :specifying :node)
@@ -173,7 +197,8 @@
 (defun numa-node-size (node)
   (with-foreign-object (freep :long 1)
     (let ((size (numa-node-size* node freep)))
-      (values size (mem-aref freep :long 0)))))
+      (if (>= size 0)
+	  (values size (mem-aref freep :long 0))))))
   
 (defcfun (numa-node-size64* "numa_node_size64")
     :long-long
@@ -183,7 +208,8 @@
 (defun numa-node-size64 (node)
   (with-foreign-object (freep :long-long 1)
     (let ((size (numa-node-size64* node freep)))
-      (values size (mem-aref freep :long-long 0)))))
+      (if (>= size 0)
+	  (values size (mem-aref freep :long-long 0))))))
 
 
 (defcfun "numa_preferred"
@@ -312,105 +338,110 @@
   (node2 :int))
 
 
-;; TODO: wrap memory management.
-(defcfun "numa_sched_getaffinity"
+(defcfun (numa-sched-getaffinity* "numa_sched_getaffinity")
     libc-return-boolean
   (pid pid_t)
   (mask struct-bitmask-pointer))
+
+(defun numa-sched-getaffinity (pid)
+  (with-temporal-struct-bitmask-pointer (bmp (numa-allocate-cpumask*))
+    (if (numa-sched-getaffinity* pid bmp)
+	(convert-from-foreign bmp '(bitmask-type :specifying :cpu)))))
 
 (defcfun "numa_sched_setaffinity"
     libc-return-boolean
   (pid pid_t)
   (mask (bitmask-type :specifying :cpu)))
 
-;; TODO: wrap memory management. This should return a bitmask.
-;; BUG: manpage don't highlight numa_allocate_cpumask()
-(defcfun "numa_node_to_cpus"
+;; A trivial issue: manpage don't highlight numa_allocate_cpumask()
+(defcfun (numa-node-to-cpus* "numa_node_to_cpus")
     libc-return-boolean
   (node :int)
   (mask struct-bitmask-pointer))
 
-;; TODO: This retval is libc-semantics.
+(defun numa-node-to-cpus (node)
+  (with-temporal-struct-bitmask-pointer (bmp (numa-allocate-cpumask*))
+    (if (numa-node-to-cpus* node bmp)
+	(convert-from-foreign bmp '(bitmask-type :specifying :cpu)))))
+
 (defcfun "numa_node_of_cpu"
-    :int
+    libc-return-int
   (cpu :int))
 
 
-;; TODO: separate 'raw' and 'bitmask' version
-
-(defcfun "numa_allocate_cpumask"
+(defcfun (numa-allocate-cpumask* "numa_allocate_cpumask")
     struct-bitmask-pointer) ; should be freed with numa_free_cpumask()
 
 ;; numa_free_cpumask() is defined in the wrapper.
 
-(defcfun "numa_allocate_nodemask"
+(defcfun (numa-allocate-nodemask* "numa_allocate_nodemask")
     struct-bitmask-pointer) ; should be freed with numa_free_nodemask()
 
 ;; numa_free_nodemask() is defined in the wrapper.
 
 
-(defcfun "numa_bitmask_alloc"
+(defcfun (numa-bitmask-alloc* "numa_bitmask_alloc")
     struct-bitmask-pointer ; should be freed with numa_bitmask_free()
   (n :unsigned-int))
 
-(defcfun "numa_bitmask_clearall"
+(defcfun (numa-bitmask-clearall* "numa_bitmask_clearall")
     struct-bitmask-pointer
   (bmp struct-bitmask-pointer))
 
-(defcfun "numa_bitmask_clearbit"
+(defcfun (numa-bitmask-clearbit* "numa_bitmask_clearbit")
     struct-bitmask-pointer
   (bmp struct-bitmask-pointer)
   (n :unsigned-int))
 
-(defcfun "numa_bitmask_equal"
+(defcfun (numa-bitmask-equal* "numa_bitmask_equal")
     (:boolean :int)
   (bmp1 struct-bitmask-pointer)
   (bmp2 struct-bitmask-pointer))
 
-(defcfun "numa_bitmask_free"
+(defcfun (numa-bitmask-free* "numa_bitmask_free")
     :void
   (bmp struct-bitmask-pointer))
 
-(defcfun "numa_bitmask_isbitset"
-    (:boolean :int)
+(defcfun (numa-bitmask-isbitset* "numa_bitmask_isbitset")
+    :int				; not a boolean, for translate-from-foreign above.
   (bmp struct-bitmask-pointer)
   (n :unsigned-int))
 
-(defcfun "numa_bitmask_nbytes"
+(defcfun (numa-bitmask-nbytes* "numa_bitmask_nbytes")
     :unsigned-int
   (bmp struct-bitmask-pointer))
 
-(defcfun "numa_bitmask_setall"
+(defcfun (numa-bitmask-setall* "numa_bitmask_setall")
     struct-bitmask-pointer
   (bmp struct-bitmask-pointer))
 
-(defcfun "numa_bitmask_setbit"
+(defcfun (numa-bitmask-setbit* "numa_bitmask_setbit")
     struct-bitmask-pointer
   (bmp struct-bitmask-pointer)
   (n :unsigned-int))
 
-(defcfun "copy_bitmask_to_nodemask"
+(defcfun (copy-bitmask-to-nodemask* "copy_bitmask_to_nodemask")
     :void
   (bmp struct-bitmask-pointer)
   (nodemask nodemask_t-pointer))
 
-(defcfun "copy_nodemask_to_bitmask"
+(defcfun (copy-nodemask-to-bitmask* "copy_nodemask_to_bitmask")
     :void
   (nodemask nodemask_t-pointer)
   (bmp struct-bitmask-pointer))
 
-(defcfun "copy_bitmask_to_bitmask"
+(defcfun (copy-bitmask-to-bitmask* "copy_bitmask_to_bitmask")
     :void
   (bmpfrom struct-bitmask-pointer)
   (bmpto struct-bitmask-pointer))
 
-(defcfun "numa_bitmask_weight"
+(defcfun (numa-bitmask-weight* "numa_bitmask_weight")
     :unsigned-int
   (bmp struct-bitmask-pointer))
 
 
 (defcfun (numa-move-pages* "numa_move_pages")
-    :int
+    libc-return-boolean
   (pid :int)
   (count :unsigned-long)
   (pages (:pointer :pointer))
@@ -418,33 +449,30 @@
   (status (:pointer :int))
   (flags :int))
 
+;; TODO: support nodes-list as a bitvector-type
 (defun numa-move-pages (pid count pages-list nodes-list &optional (flags MPOL_MF_MOVE))
   (let ((pages-list-length (length pages-list))
 	(nodes-list-length (length nodes-list)))
-    (with-foreign-object (pages-array :pointer pages-list-length)
+    (with-foreign-objects ((pages-array :pointer pages-list-length)
+			   (nodes-array :int nodes-list-length)
+			   (status-array :int pages-list-length))
       (loop for i from 0
 	 for p in pages-list
 	 do (setf (mem-aref pages-array :pointer i) p))
-      (with-foreign-object (nodes-array :int nodes-list-length)
-	(loop for i from 0
-	   for n in nodes-list
-	   do (setf (mem-aref nodes-array :int i) n))
-	(with-foreign-object (status-array :int pages-list-length)
-	  (let ((ret (numa-move-pages* pid count pages-array nodes-array
-				       status-array flags)))
-	    (case ret
-	      (-1 (values ret nil))
-	      (0 (values ret
-			 (loop for i from 0 below pages-list-length
-			    collect (mem-aref status-array :int i))))
-	      (t (error "numa_move_pages returned an unexpected value ~D" ret)))))))))
+      (loop for i from 0
+	 for n in nodes-list
+	 do (setf (mem-aref nodes-array :int i) n))
+      (if (numa-move-pages* pid count pages-array nodes-array
+			    status-array flags)
+	  (loop for i from 0 below pages-list-length
+	     collect (mem-aref status-array :int i))))))
 	  
 
 (defcfun "numa_migrate_pages"
-    libc-return-boolean
+    libc-return-int
   (pid :int)
-  (fromnodes struct-bitmask-pointer)
-  (tonodes struct-bitmask-pointer))
+  (fromnodes (bitmask-type :specifying :node))
+  (tonodes (bitmask-type :specifying :node)))
 
 
 ;; numa_error() is intended to be overriden
