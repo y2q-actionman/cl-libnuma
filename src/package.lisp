@@ -11,11 +11,18 @@
    #:MPOL_MF_MOVE
    #:MPOL_MF_MOVE_ALL))
 
+(defpackage :cl-libnuma.wrapper-syntax
+  (:use :cl :cffi :cffi-grovel)
+  (:export
+   #:*use-next-function-default*))
+
 (defpackage :cl-libnuma.wrapper
   (:use)
   (:export
    #:numa-free-cpumask*
-   #:numa-free-nodemask*))
+   #:numa-free-nodemask*
+   #:*numa-error-callback*
+   #:*numa-warn-callback*))
 
 (defpackage :cl-libnuma
   (:use :cl :cffi
@@ -129,10 +136,8 @@
    #:numa-move-pages
    #:numa-migrate-pages
 
-   ;; numa-error
    #:*numa-exit-on-error
    #:*numa-exit-on-warn
-   ;; numa-warn
 
    #:numa-pagesize
 
@@ -141,4 +146,6 @@
    #:MPOL_MF_MOVE_ALL
    #:numa-free-cpumask*
    #:numa-free-nodemask*
+   #:*numa-error-callback*
+   #:*numa-warn-callback*
    ))

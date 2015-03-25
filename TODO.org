@@ -2,7 +2,8 @@
 
 * not implemented features
 
-- [ ] Enable to set a callback for numa_error() and numa_warn().
+- [X] Enable to set a callback for numa_error() and numa_warn().
+- [ ] Test above.
 
 - [X] checks libc-semantic return values. 
 
@@ -18,6 +19,8 @@
 - [ ] Prints appropriate messages when libnuma headers are not found.
 
 - [ ] numa-move-pages: support nodes-list as a bitvector-type
+
+- [ ] rewrite smp test with cffi:mem-aref, and boudeaux-threads. 
 
 
 * additional features

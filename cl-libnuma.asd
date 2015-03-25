@@ -17,6 +17,7 @@
     ((:file "package")
      (:file "library")
      (cffi-grovel:grovel-file "grovelling")
+     (:file "wrapper-syntax")
      (cffi-grovel:wrapper-file "wrapping")
      (:file "binding")))))
 
