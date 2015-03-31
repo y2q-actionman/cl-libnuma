@@ -16,7 +16,8 @@
 
 
 ;; Overriding
-(define-overriding-callback "numa_error" :void
+(define-overriding-callback ("numa_error" :next-library cl-libnuma:libnuma)
+    :void
   (where :string))
 
 ;;  I think there is no good way to define a C-style variadic function
@@ -30,7 +31,11 @@
 
 (define NUMA_WARN_BUFFER_SIZE 256)
 
-(define-overriding-callback* "numa_warn" :void
+(define-overriding-callback* ("numa_warn"
+			      :c-callback-variable-name "numa_warn_callback"
+			      ;; Because numa_warn() is variadic, no way to pass args directly..
+			      :next-library nil)
+    :void
   ((num :int) (fmt :string) &rest)
   "char buffer[NUMA_WARN_BUFFER_SIZE];"
   "va_list ap;"

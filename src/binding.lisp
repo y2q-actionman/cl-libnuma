@@ -475,7 +475,9 @@
   (tonodes (bitmask-type :specifying :node)))
 
 
-;; numa_error() is intended to be overriden
+(defcfun "numa_error"
+    :void
+  (where :string))
 
 (defcvar "numa_exit_on_error"
     (:boolean :int))
@@ -483,7 +485,11 @@
 (defcvar "numa_exit_on_warn"
     (:boolean :int))
 
-;; numa_warn() is intended to be overriden
+(defcfun "numa_warn"
+    :void
+  (number :int)
+  (where :string)
+  &rest)
 
 
 ;; source says 'not documented', and don't appear at the top of manpage, but description is found!

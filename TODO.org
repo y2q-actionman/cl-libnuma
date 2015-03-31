@@ -22,6 +22,9 @@
 
 - [ ] rewrite smp test with cffi:mem-aref, and boudeaux-threads. 
 
+- [X] supply a library name for overriding syntax definitions.
+  (RTLD_NEXT, or a library name, or cffi library name (cffi::get-foreign-library) ..)
+
 
 * additional features
 
