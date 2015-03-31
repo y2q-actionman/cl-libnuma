@@ -17,7 +17,6 @@
     ((:file "package")
      (:file "library")
      (cffi-grovel:grovel-file "grovelling")
-     (:file "wrapper-syntax")
      (cffi-grovel:wrapper-file "wrapping")
      (:file "binding")))))
 
@@ -29,3 +28,16 @@
   (unless (uiop:symbol-call :cl-libnuma '#:numa-available)
     (warn "libnuma is unavailable in this system. ~
 All functions without numa-avaliable are undefined.")))
+
+(asdf:defsystem :cl-libnuma/ext-error
+  ;; :description ""
+  ;; :license "GNU Lesser GPL v 2.1"  ; == same as libnuma ???
+  ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
+  :depends-on (:cl-libnuma)
+  :components
+  ((:module "ext_error"
+    :serial t
+    :components
+    ((:file "package")
+     (:file "wrapper-syntax")
+     (cffi-grovel:wrapper-file "wrapping")))))
