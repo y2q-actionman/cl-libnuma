@@ -3,6 +3,7 @@
 (defpackage :cl-libnuma.grovel
   (:use)
   (:export
+   #:CHAR_BIT
    #:LIBNUMA_API_VERSION
    #:size_t
    #:pid_t
@@ -28,13 +29,11 @@
    #:libnuma
 
    ;; types
-   #:struct-bitmask-pointer
-   #:bitmask-type
-   #:bitmask
-   #:nodemask_t-pointer
-
-   ;; utils
-   #:with-temporal-struct-bitmask-pointer
+   #:struct-bitmask-pointer		; cffi type
+   #:numa-bitmask-type 			; cffi type
+   #:numa-bitmask
+   #:make-numa-bitmask
+   #:nodemask_t-pointer			; cffi type
 
    ;; numa(3) API
    #:numa-available
@@ -113,17 +112,25 @@
 
    #:numa-bitmask-alloc*
    #:numa-bitmask-clearall*
+   #:numa-bitmask-clearall
    #:numa-bitmask-clearbit*
+   #:numa-bitmask-clearbit
    #:numa-bitmask-equal*
+   #:numa-bitmask-equal
    #:numa-bitmask-free*
    #:numa-bitmask-isbitset*
+   #:numa-bitmask-isbitset
    #:numa-bitmask-nbytes*
+   #:numa-bitmask-nbytes
    #:numa-bitmask-setall*
+   #:numa-bitmask-setall
    #:numa-bitmask-setbit*
+   #:numa-bitmask-setbit
    #:copy-bitmask-to-nodemask*
    #:copy-nodemask-to-bitmask*
    #:copy-bitmask-to-bitmask*
    #:numa-bitmask-weight*
+   #:numa-bitmask-weight
 
    #:numa-move-pages*
    #:numa-move-pages

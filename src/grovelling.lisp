@@ -1,7 +1,10 @@
 (in-package :cl-libnuma.grovel)
 
+(include "limits.h")			; for CHAR_BIT
 (include "numa.h")
 (include "numaif.h")			; move_pages() flags.
+
+(constant (CHAR_BIT "CHAR_BIT"))
 
 ;; To check compatibiity
 (constant (LIBNUMA_API_VERSION "LIBNUMA_API_VERSION") :optional t)

@@ -8,49 +8,59 @@
 (defctype struct-bitmask-pointer
     (:pointer (:struct struct-bitmask)))
 
-(define-foreign-type bitmask-type ()
-  ((specifying :initarg :specifying :initform nil :accessor bitmask-type-specifying))
+(define-foreign-type numa-bitmask-type ()
+  ((specifying :initarg :specifying :initform nil :accessor numa-bitmask-type-specifying))
   (:actual-type struct-bitmask-pointer))
 
-(define-parse-method bitmask-type (&key (specifying nil))
-  (make-instance 'bitmask-type :specifying specifying))
+(define-parse-method numa-bitmask-type (&key (specifying nil))
+  (make-instance 'numa-bitmask-type :specifying specifying))
 
-(deftype bitmask ()
+(deftype numa-bitmask ()
   "A lisp representation of 'struct bitmask' of libnuma"
   '(bit-vector *))
 
-(defun bitmask-enough-size ()
+(defun numa-bitmask-enough-size ()
   (let ((cpumask-len (numa-num-possible-cpus))
 	(nodemask-len (numa-num-possible-nodes)))
     (max cpumask-len nodemask-len)))
 
-(defmethod translate-to-foreign (lisp-bitmask (type bitmask-type))
-  (let ((bmp (case (bitmask-type-specifying type)
+(defun make-numa-bitmask (&optional size-spec)
+  (let ((size (etypecase size-spec
+		(symbol (ecase size-spec
+			  (:cpu (numa-num-configured-cpus))
+			  (:node (numa-num-configured-nodes))
+			  ((nil) (numa-bitmask-enough-size))))
+		(integer size-spec)
+		(null (numa-bitmask-enough-size)))))
+    (make-array `(,size) :element-type 'bit
+		:initial-element 0))) ; follows numa_bitmask_alloc()
+
+(defmethod cffi:translate-to-foreign (lisp-bitmask (type numa-bitmask-type))
+  (let ((bmp (ecase (numa-bitmask-type-specifying type)
 	       (:cpu (numa-allocate-cpumask*))
 	       (:node (numa-allocate-nodemask*))
-	       (t (numa-bitmask-alloc* (bitmask-enough-size))))))
+	       ((nil) (numa-bitmask-alloc* (length lisp-bitmask))))))
     (loop for i across lisp-bitmask
        when (plusp i)
        do (numa-bitmask-setbit* bmp i))
     bmp))
 
-(defmethod translate-from-foreign (bmp (type bitmask-type))
+(defmethod cffi:translate-from-foreign (bmp (type numa-bitmask-type))
   (when (null-pointer-p bmp)		; 'bmp' may be null if numa_parse_***() calls.
-    (return-from translate-from-foreign nil))
-  (let* ((size (case (bitmask-type-specifying type)
-		 (:cpu (numa-num-configured-cpus))
-		 (:node (numa-num-configured-nodes))
-		 (t (bitmask-enough-size))))
-	 (lisp-bitmask (make-array `(,size) :element-type 'bit
-				   :initial-element 0))) ; follows numa_bitmask_alloc()
-    (loop for i from 0 below size
+    (return-from cffi:translate-from-foreign nil))
+  (let* ((size-spec (ecase (numa-bitmask-type-specifying type)
+		      (:cpu :cpu)
+		      (:node :node)
+		      ((nil) (* CHAR_BIT (numa-bitmask-nbytes* bmp)))))
+	 (lisp-bitmask (make-numa-bitmask size-spec)))
+    (loop for i from 0 below (length lisp-bitmask)
        do (setf (aref lisp-bitmask i)
 		(numa-bitmask-isbitset* bmp i)))
     lisp-bitmask))
 
-(defmethod free-translated-object (bmp (type bitmask-type) param)
+(defmethod cffi:free-translated-object (bmp (type numa-bitmask-type) param)
   (declare (ignore param))
-  (case (bitmask-type-specifying type)
+  (case (numa-bitmask-type-specifying type)
     (:cpu (numa-free-cpumask* bmp))
     (:node (numa-free-nodemask* bmp))
     (t (numa-bitmask-free* bmp))))
@@ -139,20 +149,20 @@
     :int)
 
 (defcfun "numa_get_mems_allowed"
-    (bitmask-type :specifying :node))
+    (numa-bitmask-type :specifying :node))
 
 
 (defcfun "numa_num_configured_cpus"
     :int)
 
 (defcvar (*numa-all-nodes* "numa_all_nodes_ptr" :read-only t)
-    (bitmask-type :specifying :node))
+    (numa-bitmask-type :specifying :node))
 
 (defcvar (*numa-no-nodes* "numa_no_nodes_ptr" :read-only t) 
-    (bitmask-type :specifying :node))
+    (numa-bitmask-type :specifying :node))
 
 (defcvar (*numa-all-cpus* "numa_all_cpus_ptr" :read-only t)
-    (bitmask-type :specifying :cpu))
+    (numa-bitmask-type :specifying :cpu))
 
 
 (defcfun "numa_num_task_cpus"
@@ -170,22 +180,22 @@
 (defun numa-parse-bitmap (line)
   (with-temporal-struct-bitmask-pointer (cpumask (numa-allocate-cpumask*))
     (if (numa-parse-bitmap* line cpumask)
-	(convert-from-foreign cpumask '(bitmask-type :specifying :cpu)))))
+	(convert-from-foreign cpumask '(numa-bitmask-type :specifying :cpu)))))
 
 (defcfun "numa_parse_nodestring"
-    (bitmask-type :specifying :node)
+    (numa-bitmask-type :specifying :node)
   (string :string))
 
 (defcfun "numa_parse_nodestring_all"
-    (bitmask-type :specifying :node)
+    (numa-bitmask-type :specifying :node)
   (string :string))
 
 (defcfun "numa_parse_cpustring"
-    (bitmask-type :specifying :cpu)
+    (numa-bitmask-type :specifying :cpu)
   (string :string))
 
 (defcfun "numa_parse_cpustring_all"
-    (bitmask-type :specifying :cpu)
+    (numa-bitmask-type :specifying :cpu)
   (string :string))
 
 
@@ -223,31 +233,31 @@
     :int)
 
 (defcfun "numa_get_interleave_mask"
-    (bitmask-type :specifying :node))
+    (numa-bitmask-type :specifying :node))
 
 (defcfun "numa_set_interleave_mask"
     :void
-  (nodemask (bitmask-type :specifying :node)))
+  (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_interleave_memory"
     :void
   (start :pointer)
   (size size_t)
-  (nodemask (bitmask-type :specifying :node)))
+  (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_bind"
     :void
-  (nodemask (bitmask-type :specifying :node)))
+  (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_set_localalloc"
     :void)
 
 (defcfun "numa_set_membind"
     :void
-  (nodemask (bitmask-type :specifying :node)))
+  (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_get_membind"
-    (bitmask-type :specifying :node))
+    (numa-bitmask-type :specifying :node))
 
   
 (defcfun "numa_alloc_onnode"
@@ -266,7 +276,7 @@
 (defcfun "numa_alloc_interleaved_subset"
     :pointer
   (size size_t)
-  (nodemask (bitmask-type :specifying :node)))
+  (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_alloc"
     :pointer
@@ -290,15 +300,14 @@
 
 (defcfun "numa_run_on_node_mask"
     libc-return-boolean
-  (nodemask (bitmask-type :specifying :node)))
+  (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_run_on_node_mask_all"
     libc-return-boolean
-  (nodemask (bitmask-type :specifying :node)))
+  (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_get_run_node_mask"
-    ;; manpage says this returns a CPU mask, but source says it's a node mask!
-    (bitmask-type :specifying :node))
+    (numa-bitmask-type :specifying :node))
 
 
 (defcfun "numa_tonode_memory"
@@ -311,7 +320,7 @@
     :void
   (start :pointer)
   (size size_t)
-  (nodemask struct-bitmask-pointer))
+  (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_setlocal_memory"
     :void
@@ -346,12 +355,12 @@
 (defun numa-sched-getaffinity (pid)
   (with-temporal-struct-bitmask-pointer (bmp (numa-allocate-cpumask*))
     (if (numa-sched-getaffinity* pid bmp)
-	(convert-from-foreign bmp '(bitmask-type :specifying :cpu)))))
+	(convert-from-foreign bmp '(numa-bitmask-type :specifying :cpu)))))
 
 (defcfun "numa_sched_setaffinity"
     libc-return-boolean
   (pid pid_t)
-  (mask (bitmask-type :specifying :cpu)))
+  (mask (numa-bitmask-type :specifying :cpu)))
 
 (defcfun (numa-node-to-cpus* "numa_node_to_cpus")
     libc-return-boolean
@@ -361,7 +370,7 @@
 (defun numa-node-to-cpus (node)
   (with-temporal-struct-bitmask-pointer (bmp (numa-allocate-cpumask*))
     (if (numa-node-to-cpus* node bmp)
-	(convert-from-foreign bmp '(bitmask-type :specifying :cpu)))))
+	(convert-from-foreign bmp '(numa-bitmask-type :specifying :cpu)))))
 
 (defcfun "numa_node_of_cpu"
     libc-return-int
@@ -370,11 +379,13 @@
 
 (defcfun (numa-allocate-cpumask* "numa_allocate_cpumask")
     struct-bitmask-pointer) ; should be freed with numa_free_cpumask()
+;; Lisp API is make-numa-bitmask
 
 ;; numa_free_cpumask() is defined in the wrapper.
 
 (defcfun (numa-allocate-nodemask* "numa_allocate_nodemask")
     struct-bitmask-pointer) ; should be freed with numa_free_nodemask()
+;; Lisp API is make-numa-bitmask
 
 ;; numa_free_nodemask() is defined in the wrapper.
 
@@ -387,37 +398,60 @@
     struct-bitmask-pointer
   (bmp struct-bitmask-pointer))
 
+(defun numa-bitmask-clearall (lisp-bitmask)
+  (fill lisp-bitmask 0))
+
 (defcfun (numa-bitmask-clearbit* "numa_bitmask_clearbit")
     struct-bitmask-pointer
   (bmp struct-bitmask-pointer)
   (n :unsigned-int))
+
+(defun numa-bitmask-clearbit (lisp-bitmask n)
+  (setf (bit lisp-bitmask n) 0))
 
 (defcfun (numa-bitmask-equal* "numa_bitmask_equal")
     (:boolean :int)
   (bmp1 struct-bitmask-pointer)
   (bmp2 struct-bitmask-pointer))
 
+(defun numa-bitmask-equal (lisp-bitmask1 lisp-bitmask2)
+  (equal lisp-bitmask1 lisp-bitmask2))
+
 (defcfun (numa-bitmask-free* "numa_bitmask_free")
     :void
   (bmp struct-bitmask-pointer))
+
+;; No 'numa-bitmask-free' for lisp-bitmask.
 
 (defcfun (numa-bitmask-isbitset* "numa_bitmask_isbitset")
     :int				; not a boolean, for translate-from-foreign above.
   (bmp struct-bitmask-pointer)
   (n :unsigned-int))
 
+(defun numa-bitmask-isbitset (lisp-bitmask n)
+  (bit lisp-bitmask n))
+
 (defcfun (numa-bitmask-nbytes* "numa_bitmask_nbytes")
     :unsigned-int
   (bmp struct-bitmask-pointer))
+
+(defun numa-bitmask-nbytes (lisp-bitmask)
+  (ceiling (length lisp-bitmask) CHAR_BIT))
 
 (defcfun (numa-bitmask-setall* "numa_bitmask_setall")
     struct-bitmask-pointer
   (bmp struct-bitmask-pointer))
 
+(defun numa-bitmask-setall (lisp-bitmask)
+  (fill lisp-bitmask 1))
+
 (defcfun (numa-bitmask-setbit* "numa_bitmask_setbit")
     struct-bitmask-pointer
   (bmp struct-bitmask-pointer)
   (n :unsigned-int))
+
+(defun numa-bitmask-setbit (lisp-bitmask n)
+  (setf (bit lisp-bitmask n) 1))
 
 (defcfun (copy-bitmask-to-nodemask* "copy_bitmask_to_nodemask")
     :void
@@ -437,6 +471,9 @@
 (defcfun (numa-bitmask-weight* "numa_bitmask_weight")
     :unsigned-int
   (bmp struct-bitmask-pointer))
+
+(defun numa-bitmask-weight (lisp-bitmask)
+  (reduce #'+ lisp-bitmask))
 
 
 (defcfun (numa-move-pages* "numa_move_pages")
@@ -470,8 +507,8 @@
 (defcfun "numa_migrate_pages"
     libc-return-int
   (pid :int)
-  (fromnodes (bitmask-type :specifying :node))
-  (tonodes (bitmask-type :specifying :node)))
+  (fromnodes (numa-bitmask-type :specifying :node))
+  (tonodes (numa-bitmask-type :specifying :node)))
 
 
 (defcfun "numa_error"
