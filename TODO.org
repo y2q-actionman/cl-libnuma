@@ -14,11 +14,12 @@
   And more, 'nodemask' or 'cpumask' class?
   Or, List?
 
-- [ ] bitmask operations for cl-libnuma:bitmask type?
+- [X] bitmask operations for cl-libnuma:bitmask type?
 
 - [ ] Prints appropriate messages when libnuma headers are not found.
 
-- [ ] numa-move-pages: support nodes-list as a bitvector-type
+- [X] (numa-move-pages: support nodes-list as a bitvector-type)
+  Dropped. I mistaken its argument.
 
 - [ ] rewrite smp test with cffi:mem-aref, and boudeaux-threads. 
 
@@ -28,7 +29,7 @@
 
 * additional features
 
-- [X] Should I make 'getpid' ready?
+- [X] (Should I make 'getpid' ready?)
   or, check interoperability with excl.osi, etc.
   -- Dropped. We can use 'pid=0' as a pid of the current process.
 
