@@ -28,8 +28,9 @@
 
 * additional features
 
-- [ ] Should I make 'getpid' ready?
+- [X] Should I make 'getpid' ready?
   or, check interoperability with excl.osi, etc.
+  -- Dropped. We can use 'pid=0' as a pid of the current process.
 
 - [ ] Import errno?
   numa-move-pages returns an array filled with errno.

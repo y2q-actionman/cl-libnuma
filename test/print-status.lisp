@@ -8,10 +8,6 @@
 (defvar *nodes* (numa-num-configured-nodes))
 (defvar *cpus* (numa-num-task-cpus))	; because numa-num-configured-cpus is not found..
 
-(defun getpid ()
-  #+allegro(excl.osi:getpid)
-  #-allegro(error "gomen"))
-
 (defun print-current-status ()
   (fresh-line)
 
@@ -69,8 +65,8 @@
        (terpri))
   (terpri)
 
-  (format t "numa-sched-getaffinity for this process (~D) ~%" (getpid))
-  (format t "  ~A~%" (numa-sched-getaffinity (getpid)))
+  (format t "numa-sched-getaffinity for this process~%")
+  (format t "  ~A~%" (numa-sched-getaffinity 0))
   (format t "numa-node-to-cpus")
   (loop for i from 0 below *nodes*
      do (format t "~& node ~2D ~A" i (numa-node-to-cpus i)))
