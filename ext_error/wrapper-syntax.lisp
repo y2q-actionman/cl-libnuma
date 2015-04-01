@@ -4,6 +4,7 @@
 (defparameter *next-library-default* nil)
 (defparameter *print-error-message* t)
 
+;; Constants
 (defconstant +next-library-specials+
   '(:RTLD_NEXT :RTLD_DEFAULT))
 (defconstant +overriding-callback-suffix+ "_callback")
@@ -12,7 +13,7 @@
 (defconstant +dl-symbol-name+ "cffi_overrider_dl_symbol")
 (defconstant +error-message-name+ "cffi_overrider_msg")
 
-
+;; Syntax definitions
 (defun parse-overriding-callback-name (nameopts)
   "Returns: (values <c-overriden-function-name> <lisp-callback-variable-name>
                     <c-callback-variable-name> <next-library>)"

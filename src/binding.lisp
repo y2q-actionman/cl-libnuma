@@ -57,7 +57,8 @@
 
 
 ;; A representation of 'nodemask_t'
-;; (This is an old interface, so I don't implement anything around it..)
+;; (This is an old interface of libnuma, so I don't implement anything
+;; around it..)
 (defctype nodemask_t-pointer
     (:pointer (:struct nodemask_t)))
 
@@ -108,7 +109,6 @@
 (defcfun "numa_num_possible_nodes"
     :int)
 
-;; BUG: This does not exist at the top of man page, and has no explanations!
 (defcfun (numa-num-possible-cpus* "numa_num_possible_cpus")
     :int)
 
@@ -219,7 +219,7 @@
     :void
   (node :int))
 
-(defcfun "numa_get_interleave_node" ; source says this is undocumented
+(defcfun "numa_get_interleave_node"
     :int)
 
 (defcfun "numa_get_interleave_mask"
@@ -353,7 +353,6 @@
   (pid pid_t)
   (mask (bitmask-type :specifying :cpu)))
 
-;; A trivial issue: manpage don't highlight numa_allocate_cpumask()
 (defcfun (numa-node-to-cpus* "numa_node_to_cpus")
     libc-return-boolean
   (node :int)
@@ -492,6 +491,5 @@
   &rest)
 
 
-;; source says 'not documented', and don't appear at the top of manpage, but description is found!
 (defcfun "numa_pagesize"
     :int)

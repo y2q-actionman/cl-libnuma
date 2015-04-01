@@ -36,3 +36,25 @@
 
 - [X] checks libnuma version?
   for numa-num-possible-cpus
+
+
+* libnuma manpage bugs
+
+- numa_num_possible_cpus()
+  This does not exist at the top of man page, and has no explanations!
+
+- numa_free_cpumask(), numa_free_nodemask()
+  The manpage says nothing, but this function takes a pointer to
+  struct bitmask! (K&R C style!?)
+
+- numa_get_interleave_node()
+  source says this is undocumented
+
+- numa_get_run_node_mask()
+  manpage says this returns a CPU mask, but source says it's a node mask!
+
+- numa_node_to_cpus()
+  A trivial issue: manpage doesn't highlight numa_allocate_cpumask()
+
+- numa_pagesize()
+  source says 'not documented', and don't appear at the top of manpage, but description is found!
