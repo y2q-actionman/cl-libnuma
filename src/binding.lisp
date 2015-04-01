@@ -485,22 +485,33 @@
   (status (:pointer :int))
   (flags :int))
 
-;; TODO: support nodes-list as a bitvector-type
-(defun numa-move-pages (pid count pages-list nodes-list &optional (flags MPOL_MF_MOVE))
-  (let ((pages-list-length (length pages-list))
-	(nodes-list-length (length nodes-list)))
-    (with-foreign-objects ((pages-array :pointer pages-list-length)
-			   (nodes-array :int nodes-list-length)
-			   (status-array :int pages-list-length))
-      (loop for i from 0
-	 for p in pages-list
-	 do (setf (mem-aref pages-array :pointer i) p))
-      (loop for i from 0
-	 for n in nodes-list
-	 do (setf (mem-aref nodes-array :int i) n))
-      (if (numa-move-pages* pid count pages-array nodes-array
+(defun numa-move-pages (pid pages nodes &optional (flags MPOL_MF_MOVE))
+  (let* ((pages-length (length pages))
+	 (nodes-length (length nodes))
+	 (count (cond ((null nodes)
+		       pages-length)
+		      ((= pages-length nodes-length)
+		       pages-length)
+		      (t
+		       (error "The length of 'pages' and 'nodes' should be same.")))))
+    (with-foreign-objects ((pages-array :pointer count)
+			   (nodes-array :int (if nodes count 0))
+			   (status-array :int count))
+      (map nil (let ((index 0))
+		 (lambda (page)
+		   (setf (mem-aref pages-array :pointer index) page)
+		   (incf index)))
+	   pages)
+      (when nodes
+	(map nil (let ((index 0))
+		   (lambda (node)
+		     (setf (mem-aref pages-array :int index) node)
+		     (incf index)))
+	     nodes))
+      (if (numa-move-pages* pid count pages-array
+			    (if nodes nodes-array (null-pointer))
 			    status-array flags)
-	  (loop for i from 0 below pages-list-length
+	  (loop for i from 0 below count
 	     collect (mem-aref status-array :int i))))))
 	  
 
