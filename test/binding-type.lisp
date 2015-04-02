@@ -1,0 +1,72 @@
+(in-package :cl-libnuma.test)
+
+;; types
+(defun test-binding-cffi-types ()
+  (and-assert
+   (cffi-type-exists 'struct-bitmask-pointer)
+   (cffi-type-exists 'numa-bitmask-type)
+   (cffi-type-exists '(numa-bitmask-type :specifying :cpu))
+   (cffi-type-exists '(numa-bitmask-type :specifying :node))
+   (cffi-type-exists '(numa-bitmask-type :specifying nil))
+   (assume-condition ()
+     (cffi-type-exists '(numa-bitmask-type :specifying 'hoge)))
+   (cffi-type-exists 'nodemask_t-pointer)
+   (cffi-type-exists 'mbind-flag)))
+
+(defun test-make-numa-bitmask ()
+  (and-assert
+   (make-numa-bitmask)
+   (make-numa-bitmask :cpu)
+   (make-numa-bitmask :node)
+   (make-numa-bitmask 1)
+   (make-numa-bitmask 5)))
+
+(defun test-numa-bitmask-conversion ()
+  (flet ((test-mask-conversion (mask-type)
+	   (let ((mask (make-numa-bitmask mask-type)))
+	     (loop for i from 0 below (length mask)
+		do (setf (bit mask i) (random 2)))
+	     (let* ((foreign-bmp (convert-to-foreign mask 'numa-bitmask-type))
+		    (new-mask (convert-from-foreign foreign-bmp 'numa-bitmask-type)))
+	       (assert (typep new-mask 'numa-bitmask))
+	       (loop for i across mask
+		  for j across new-mask
+		  always (= i j))))))
+    (and-assert
+     (test-mask-conversion nil)
+     (test-mask-conversion :cpu)
+     (test-mask-conversion :node)
+     (test-mask-conversion 1)
+     (test-mask-conversion 5))))
+
+(defun test-binding-internal-cffi-types ()
+  (and-assert
+   (cffi-type-exists 'cl-libnuma::libc-return-boolean)
+   (convert-from-foreign (convert-to-foreign 0 :int)
+   			 'cl-libnuma::libc-return-boolean)
+   (not (convert-from-foreign (convert-to-foreign -1 :int)
+   			      'cl-libnuma::libc-return-boolean))
+   (assume-condition ()
+     (convert-to-foreign t 'cl-libnuma::libc-return-boolean))
+   (assume-condition ()
+     (convert-to-foreign nil 'cl-libnuma::libc-return-boolean))
+
+   (cffi-type-exists 'cl-libnuma::libc-return-int)
+   (= 0 (convert-from-foreign (convert-to-foreign 0 :int)
+   			      'cl-libnuma::libc-return-int))
+   (= 1 (convert-from-foreign (convert-to-foreign 1 :int)
+   			      'cl-libnuma::libc-return-int))
+   (not (convert-from-foreign (convert-to-foreign -1 :int)
+   			      'cl-libnuma::libc-return-int))
+   (assume-condition ()
+     (convert-to-foreign 0 'cl-libnuma::libc-return-int))
+   (assume-condition ()
+     (convert-to-foreign 1 'cl-libnuma::libc-return-int))
+   (assume-condition ()
+     (convert-to-foreign -1 'cl-libnuma::libc-return-int))))
+
+(defun test-binding-type ()
+  (and (test-binding-cffi-types)
+       (test-make-numa-bitmask)
+       (test-numa-bitmask-conversion)
+       (test-binding-internal-cffi-types)))

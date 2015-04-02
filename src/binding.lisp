@@ -14,7 +14,9 @@
   (:actual-type struct-bitmask-pointer))
 
 (define-parse-method numa-bitmask-type (&key (specifying nil))
-  (make-instance 'numa-bitmask-type :specifying specifying))
+  (ecase specifying
+    ((:cpu :node nil)
+     (make-instance 'numa-bitmask-type :specifying specifying))))
 
 (deftype numa-bitmask ()
   "A lisp representation of 'struct bitmask' of libnuma"
@@ -41,8 +43,8 @@
 	       (:cpu (numa-allocate-cpumask*))
 	       (:node (numa-allocate-nodemask*))
 	       ((nil) (numa-bitmask-alloc* (length lisp-bitmask))))))
-    (loop for i across lisp-bitmask
-       when (plusp i)
+    (loop for i from 0 below (length lisp-bitmask)
+       when (numa-bitmask-isbitset lisp-bitmask i)
        do (numa-bitmask-setbit* bmp i))
     bmp))
 
@@ -55,8 +57,8 @@
 		      ((nil) (* +CHAR-BIT+ (numa-bitmask-nbytes* bmp)))))
 	 (lisp-bitmask (make-numa-bitmask size-spec)))
     (loop for i from 0 below (length lisp-bitmask)
-       do (setf (aref lisp-bitmask i)
-		(numa-bitmask-isbitset* bmp i)))
+       when (numa-bitmask-isbitset* bmp i)
+       do (numa-bitmask-setbit lisp-bitmask i))
     lisp-bitmask))
 
 (defmethod cffi:free-translated-object (bmp (type numa-bitmask-type) param)
@@ -425,12 +427,12 @@
 ;; No 'numa-bitmask-free' for lisp-bitmask.
 
 (defcfun (numa-bitmask-isbitset* "numa_bitmask_isbitset")
-    :int				; not a boolean, for translate-from-foreign above.
+    :boolean
   (bmp struct-bitmask-pointer)
   (n :unsigned-int))
 
 (defun numa-bitmask-isbitset (lisp-bitmask n)
-  (bit lisp-bitmask n))
+  (= 1 (bit lisp-bitmask n)))
 
 (defcfun (numa-bitmask-nbytes* "numa_bitmask_nbytes")
     :unsigned-int

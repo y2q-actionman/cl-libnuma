@@ -29,7 +29,22 @@
     (warn "libnuma is unavailable in this system. ~
 All functions without numa-avaliable are undefined.")))
 
-(asdf:defsystem :cl-libnuma/ext-error
+(asdf:defsystem :cl-libnuma.test
+  ;; :description ""
+  ;; :license "GNU Lesser GPL v 2.1"  ; == same as libnuma ???
+  ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
+  :depends-on (:cl-libnuma)
+  :components
+  ((:module "test"
+    :components
+    ((:file "package")
+     (:file "util" :depends-on ("package"))
+     (:file "grovel" :depends-on ("util"))
+     (:file "binding-type" :depends-on ("util"))
+     (:file "main" :depends-on ("grovel" "binding-type")))
+     )))
+
+(asdf:defsystem :cl-libnuma.ext-error
   ;; :description ""
   ;; :license "GNU Lesser GPL v 2.1"  ; == same as libnuma ???
   ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
