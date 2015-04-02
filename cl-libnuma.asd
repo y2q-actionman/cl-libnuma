@@ -41,6 +41,7 @@ All functions without numa-avaliable are undefined.")))
      (:file "util" :depends-on ("package"))
      (:file "grovel" :depends-on ("util"))
      (:file "binding-type" :depends-on ("util"))
+     (:file "binding-func" :depends-on ("util"))
      (:file "main" :depends-on ("grovel" "binding-type")))
      )))
 

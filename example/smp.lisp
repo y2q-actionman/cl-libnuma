@@ -1,16 +1,16 @@
 (in-package :cl-user)
 
-;; (asdf:load-system :bordeaux-threads)
-;; (asdf:load-system :cffi)
+(asdf:load-system :bordeaux-threads)
+(asdf:load-system :cffi)
 
-(defpackage :cl-libnuma-test-smp-general
+(defpackage :cl-libnuma.example.smp
   (:use :cl :cl-libnuma :cffi))
 
-(in-package :cl-libnuma-test-smp-general)
+(in-package :cl-libnuma.example.smp)
 
 (defparameter *allocation-pages* 16)
 (defparameter *allocation-size* (* (numa-pagesize)
-				   *allocation-size*))
+				   *allocation-pages*))
 
 (defparameter *print-message* nil)
 

@@ -49,9 +49,9 @@
    #:numa-get-mems-allowed
    
    #:numa-num-configured-cpus
-   #:*numa-all-nodes*
-   #:*numa-no-nodes*
-   #:*numa-all-cpus*
+   #:*numa-all-nodes-bitmask*
+   #:*numa-no-nodes-bitmask*
+   #:*numa-all-cpus-bitmask*
 
    #:numa-num-task-cpus
    #:numa-num-task-nodes

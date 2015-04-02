@@ -1,9 +1,9 @@
 (in-package :cl-user)
 
-(defpackage :cl-libnuma-test-print
+(defpackage :cl-libnuma.example.print
   (:use :cl :cl-libnuma))
 
-(in-package :cl-libnuma-test-print)
+(in-package :cl-libnuma.example.print)
 
 (defvar *nodes* (numa-num-configured-nodes))
 (defvar *cpus* (numa-num-task-cpus))	; because numa-num-configured-cpus is not found..
@@ -25,9 +25,9 @@
   (terpri)
 
   (format t "numa-num-configured-cpus = ~A~%" (numa-num-configured-cpus))
-  (format t "*numa-all-nodes* = ~A~%" *numa-all-nodes*)
-  (format t "*numa-no-nodes* = ~A~%" *numa-no-nodes*)
-  (format t "*numa-all-cpus-ptr* = ~A~%" *numa-all-cpus*)
+  (format t "*numa-all-nodes-bitmask* = ~A~%" *numa-all-nodes-bitmask*)
+  (format t "*numa-no-nodes-bitmask* = ~A~%" *numa-no-nodes-bitmask*)
+  (format t "*numa-all-cpus-bitmask* = ~A~%" *numa-all-cpus-bitmask*)
   (terpri)
 
   (format t "numa-num-task-cpus = ~A~%" (numa-num-task-cpus))

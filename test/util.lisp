@@ -12,6 +12,9 @@
      (:no-error (&rest last-values)
        (values nil last-values))))
 
+(defmacro always-success (&body body)
+  `(progn ,@body t))
+
 (defun cffi-type-exists (symbol)
   (and (>= (foreign-type-size symbol)
 	   (foreign-type-alignment symbol))))

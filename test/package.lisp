@@ -5,6 +5,7 @@
   (:export
    #:and-assert
    #:assume-condition
+   #:always-success
    #:cffi-type-exists
    #:cffi-enum-exists))
 

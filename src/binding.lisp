@@ -158,13 +158,13 @@
 (defcfun "numa_num_configured_cpus"
     :int)
 
-(defcvar (*numa-all-nodes* "numa_all_nodes_ptr" :read-only t)
+(defcvar (*numa-all-nodes-bitmask* "numa_all_nodes_ptr" :read-only t)
     (numa-bitmask-type :specifying :node))
 
-(defcvar (*numa-no-nodes* "numa_no_nodes_ptr" :read-only t) 
+(defcvar (*numa-no-nodes-bitmask* "numa_no_nodes_ptr" :read-only t) 
     (numa-bitmask-type :specifying :node))
 
-(defcvar (*numa-all-cpus* "numa_all_cpus_ptr" :read-only t)
+(defcvar (*numa-all-cpus-bitmask* "numa_all_cpus_ptr" :read-only t)
     (numa-bitmask-type :specifying :cpu))
 
 

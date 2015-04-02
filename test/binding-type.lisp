@@ -21,17 +21,21 @@
    (make-numa-bitmask 1)
    (make-numa-bitmask 5)))
 
+(defun make-random-numa-bitmask (&optional (size-spec nil))
+  (loop with mask = (make-numa-bitmask size-spec)
+     for i from 0 below (length mask)
+     do (setf (bit mask i) (random 2))
+     finally (return mask)))
+
 (defun test-numa-bitmask-conversion ()
   (flet ((test-mask-conversion (mask-type)
-	   (let ((mask (make-numa-bitmask mask-type)))
-	     (loop for i from 0 below (length mask)
-		do (setf (bit mask i) (random 2)))
-	     (let* ((foreign-bmp (convert-to-foreign mask 'numa-bitmask-type))
-		    (new-mask (convert-from-foreign foreign-bmp 'numa-bitmask-type)))
-	       (assert (typep new-mask 'numa-bitmask))
-	       (loop for i across mask
-		  for j across new-mask
-		  always (= i j))))))
+	   (let* ((mask (make-random-numa-bitmask mask-type))
+		  (foreign-bmp (convert-to-foreign mask 'numa-bitmask-type))
+		  (new-mask (convert-from-foreign foreign-bmp 'numa-bitmask-type)))
+	     (assert (typep new-mask 'numa-bitmask))
+	     (loop for i across mask
+		for j across new-mask
+		always (= i j)))))
     (and-assert
      (test-mask-conversion nil)
      (test-mask-conversion :cpu)

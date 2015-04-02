@@ -2,10 +2,10 @@
 
 (in-package :cl-user)
 
-(defpackage :cl-libnuma-test-acl-smp
+(defpackage :cl-libnuma.example.acl-smp
   (:use :cl :cl-libnuma :excl))
 
-(in-package :cl-libnuma-test-acl-smp)
+(in-package :cl-libnuma.example.acl-smp)
 
 (defparameter *allocation-size* (* 16 (numa-pagesize)))
 
