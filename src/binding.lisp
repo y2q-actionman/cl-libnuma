@@ -334,11 +334,11 @@
 
 (defcfun "numa_set_bind_policy"
     :void
-  (strict :int))
+  (strict? (:boolean :int)))
 
 (defcfun "numa_set_strict"
     :void
-  (strict :int))
+  (strict? (:boolean :int)))
 
 
 (defcfun "numa_distance"
