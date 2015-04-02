@@ -208,10 +208,10 @@
   (freep (:pointer :long)))
 
 (defun numa-node-size (node)
-  (with-foreign-object (freep :long 1)
+  (with-foreign-object (freep :long)
     (let ((size (numa-node-size* node freep)))
       (if (>= size 0)
-	  (values size (mem-aref freep :long 0))))))
+	  (values size (mem-aref freep :long))))))
   
 (defcfun (numa-node-size64* "numa_node_size64")
     :long-long
@@ -219,10 +219,10 @@
   (freep (:pointer :long-long)))
 
 (defun numa-node-size64 (node)
-  (with-foreign-object (freep :long-long 1)
+  (with-foreign-object (freep :long-long)
     (let ((size (numa-node-size64* node freep)))
       (if (>= size 0)
-	  (values size (mem-aref freep :long-long 0))))))
+	  (values size (mem-aref freep :long-long))))))
 
 
 (defcfun "numa_preferred"
