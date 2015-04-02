@@ -4,10 +4,10 @@
 (include "numa.h")
 (include "numaif.h")			; move_pages() flags.
 
-(constant (CHAR_BIT "CHAR_BIT"))
+(constant (+CHAR-BIT+ "CHAR_BIT"))
 
 ;; To check compatibiity
-(constant (LIBNUMA_API_VERSION "LIBNUMA_API_VERSION") :optional t)
+(constant (+LIBNUMA-API-VERSION+ "LIBNUMA_API_VERSION") :optional t)
 
 (ctype size_t "size_t")
 (ctype pid_t "pid_t")
@@ -16,5 +16,6 @@
 (cstruct struct-bitmask "struct bitmask")	; opaque
 
 ;; numa_move_pages() flags.
-(constant (MPOL_MF_MOVE "MPOL_MF_MOVE"))
-(constant (MPOL_MF_MOVE_ALL "MPOL_MF_MOVE_ALL"))
+(constantenum mbind-flag
+  ((:MPOL-MF-MOVE "MPOL_MF_MOVE"))
+  ((:MPOL-MF-MOVE-ALL "MPOL_MF_MOVE_ALL")))

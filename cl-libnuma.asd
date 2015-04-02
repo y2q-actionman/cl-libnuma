@@ -22,7 +22,7 @@
 
 (defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma)) &rest args &key &allow-other-keys)
   (declare (ignore args))
-  (when (/= (symbol-value (find-symbol "LIBNUMA_API_VERSION" :cl-libnuma.grovel))
+  (when (/= (symbol-value (find-symbol "+LIBNUMA-API-VERSION+" :cl-libnuma.grovel))
 	    (symbol-value (find-symbol "+CL-LIBNUMA-TARGET-API-VERSION+" :cl-libnuma)))
     (warn "libnuma is newer than cl-libnuma implemented"))
   (unless (uiop:symbol-call :cl-libnuma '#:numa-available)

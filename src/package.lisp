@@ -3,14 +3,13 @@
 (defpackage :cl-libnuma.grovel
   (:use)
   (:export
-   #:CHAR_BIT
-   #:LIBNUMA_API_VERSION
+   #:+CHAR-BIT+
+   #:+LIBNUMA-API-VERSION+
    #:size_t
    #:pid_t
    #:nodemask_t
    #:struct-bitmask
-   #:MPOL_MF_MOVE
-   #:MPOL_MF_MOVE_ALL))
+   #:mbind-flag))
 
 (defpackage :cl-libnuma.wrapper
   (:use)
@@ -32,8 +31,10 @@
    #:struct-bitmask-pointer		; cffi type
    #:numa-bitmask-type 			; cffi type
    #:numa-bitmask
-   #:make-numa-bitmask
    #:nodemask_t-pointer			; cffi type
+   #:mbind-flag				; cffi type
+
+   #:make-numa-bitmask
 
    ;; numa(3) API
    #:numa-available
@@ -108,7 +109,9 @@
    #:numa-node-of-cpu
 
    #:numa-allocate-cpumask*
+   #:numa-free-cpumask*
    #:numa-allocate-nodemask*
+   #:numa-free-nodemask*
 
    #:numa-bitmask-alloc*
    #:numa-bitmask-clearall*
@@ -142,9 +145,4 @@
    #:numa-warn
 
    #:numa-pagesize
-
-   ;; re-export
-   #:MPOL_MF_MOVE
-   #:MPOL_MF_MOVE_ALL
-   #:numa-free-cpumask*
-   #:numa-free-nodemask*))
+   ))

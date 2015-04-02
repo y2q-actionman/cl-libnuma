@@ -1,6 +1,7 @@
 (in-package :cl-libnuma)
 
-(defconstant +cl-libnuma-target-api-version+ 2)
+(defconstant +cl-libnuma-target-api-version+ 2
+  "The API version of libnuma when cl-libnuma is coded. (2015-03-31)")
 
 ;;; Types
 
@@ -51,7 +52,7 @@
   (let* ((size-spec (ecase (numa-bitmask-type-specifying type)
 		      (:cpu :cpu)
 		      (:node :node)
-		      ((nil) (* CHAR_BIT (numa-bitmask-nbytes* bmp)))))
+		      ((nil) (* +CHAR-BIT+ (numa-bitmask-nbytes* bmp)))))
 	 (lisp-bitmask (make-numa-bitmask size-spec)))
     (loop for i from 0 below (length lisp-bitmask)
        do (setf (aref lisp-bitmask i)
@@ -436,7 +437,7 @@
   (bmp struct-bitmask-pointer))
 
 (defun numa-bitmask-nbytes (lisp-bitmask)
-  (ceiling (length lisp-bitmask) CHAR_BIT))
+  (ceiling (length lisp-bitmask) +CHAR-BIT+))
 
 (defcfun (numa-bitmask-setall* "numa_bitmask_setall")
     struct-bitmask-pointer
@@ -483,9 +484,9 @@
   (pages (:pointer :pointer))
   (nodes (:pointer :int))
   (status (:pointer :int))
-  (flags :int))
+  (flags mbind-flag))
 
-(defun numa-move-pages (pid pages nodes &optional (flags MPOL_MF_MOVE))
+(defun numa-move-pages (pid pages nodes &optional (flags :MPOL-MF-MOVE))
   (let* ((pages-length (length pages))
 	 (nodes-length (length nodes))
 	 (count (cond ((null nodes)
