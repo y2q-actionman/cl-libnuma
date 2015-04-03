@@ -74,9 +74,9 @@
 ;; around it..)
 (defctype nodemask_t-pointer
     (:pointer (:struct nodemask_t)))
+;; TODO: is this typedef required?
 
-
-;; A representation of 'int' returned from libc.
+;; A representation of a return value from libc.
 (defun lisp-to-libc-return-*** (value)
   (assert nil
 	  ()
@@ -100,6 +100,18 @@
     (:wrapper :int
 	      :to-c lisp-to-libc-return-***
 	      :from-c lisp-from-libc-return-int))
+
+(defun lisp-to-malloc-pointer (value)
+  (if value value (null-pointer)))
+
+(defun lisp-from-malloc-pointer (value)
+  (if (null-pointer-p value) nil value))
+
+(defctype malloc-pointer
+    (:wrapper :pointer
+	      :to-c lisp-to-malloc-pointer
+	      :from-c lisp-from-malloc-pointer)
+  "This type is a wrapper for a pointer except treats NIL as a null pointer.")
 
 
 ;;; Utils
@@ -230,7 +242,7 @@
 
 (defcfun "numa_set_preferred"
     :void
-  (node :int))
+  (node :int))				; TODO: should wrap '-1' ?
 
 (defcfun "numa_get_interleave_node"
     :int)
@@ -264,47 +276,50 @@
 
   
 (defcfun "numa_alloc_onnode"
-    :pointer
+    malloc-pointer
   (size size_t)
-  (node :int))
+  (node :int))				; if out-of-range, this will fail.
 
 (defcfun "numa_alloc_local"
-    :pointer
+    malloc-pointer
   (size size_t))
 
 (defcfun "numa_alloc_interleaved"
-    :pointer
+    malloc-pointer
   (size size_t))
 
 (defcfun "numa_alloc_interleaved_subset"
-    :pointer
+    malloc-pointer
   (size size_t)
   (nodemask (numa-bitmask-type :specifying :node)))
 
 (defcfun "numa_alloc"
-    :pointer
+    malloc-pointer
   (size size_t))
 
 (defcfun "numa_realloc"
-    :pointer
-  (old-addr :pointer)
+    malloc-pointer
+  (old-addr malloc-pointer)
   (old-size size_t)
   (new-size size_t))
 
 (defcfun "numa_free"
     :void
-  (start :pointer)
+  (start malloc-pointer)
   (size size_t))
 
 
 (defcfun "numa_run_on_node"
     libc-return-boolean
-  (node :int))
+  (node :int))				; TODO: should wrap '-1'?
 
 (defcfun "numa_run_on_node_mask"
     libc-return-boolean
   (nodemask (numa-bitmask-type :specifying :node)))
 
+;; TODO: check libnuma version.
+;; This is added at 2013-09-10
+;; http://permalink.gmane.org/gmane.linux.kernel.numa/832
 (defcfun "numa_run_on_node_mask_all"
     libc-return-boolean
   (nodemask (numa-bitmask-type :specifying :node)))
@@ -317,7 +332,7 @@
     :void
   (start :pointer)
   (size size_t)
-  (node :int))
+  (node :int))				; if out-of-range, this will fail
 
 (defcfun "numa_tonodemask_memory"
     :void
@@ -344,6 +359,7 @@
   (strict? (:boolean :int)))
 
 
+;; TODO: return nil if this returns 0, on error.
 (defcfun "numa_distance"
     :int
   (node1 :int)
@@ -382,13 +398,23 @@
 
 (defcfun (numa-allocate-cpumask* "numa_allocate_cpumask")
     struct-bitmask-pointer) ; should be freed with numa_free_cpumask()
+
 ;; Lisp API is make-numa-bitmask
+;; TODO: should add this?
+#+ignore
+(defun numa-allocate-cpumask ()
+  (make-numa-bitmask :cpu))
 
 ;; numa_free_cpumask() is defined in the wrapper.
 
 (defcfun (numa-allocate-nodemask* "numa_allocate_nodemask")
     struct-bitmask-pointer) ; should be freed with numa_free_nodemask()
+
 ;; Lisp API is make-numa-bitmask
+;; TODO: should add this?
+#+ignore
+(defun numa-allocate-nodemask ()
+  (make-numa-bitmask :node))
 
 ;; numa_free_nodemask() is defined in the wrapper.
 

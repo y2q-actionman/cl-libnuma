@@ -5,7 +5,7 @@
        (constantp sym)))
 
 (defun test-grovel ()
-  (and-assert
+  (assert-progn
    (grovel-constant-exists '+CHAR-BIT+)
    (grovel-constant-exists '+LIBNUMA-API-VERSION+)
    (cffi-type-exists 'size_t)

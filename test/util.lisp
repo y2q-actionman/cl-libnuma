@@ -1,10 +1,11 @@
 (in-package :cl-libnuma.test-util)
 
-(defmacro and-assert (&rest forms)
+(defmacro assert-progn (&rest forms)
   `(progn ,@(loop for i in forms
 	       collect `(assert ,i))
 	  t))
 
+;; TODO: name is 'expect'?
 (defmacro assume-condition ((&optional (condition-type 'error)) &body body)
   `(handler-case (progn ,@body)
      (,condition-type (condition)

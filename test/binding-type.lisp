@@ -2,7 +2,7 @@
 
 ;; types
 (defun test-binding-cffi-types ()
-  (and-assert
+  (assert-progn
    (cffi-type-exists 'struct-bitmask-pointer)
    (cffi-type-exists 'numa-bitmask-type)
    (cffi-type-exists '(numa-bitmask-type :specifying :cpu))
@@ -14,7 +14,7 @@
    (cffi-type-exists 'mbind-flag)))
 
 (defun test-make-numa-bitmask ()
-  (and-assert
+  (assert-progn
    (make-numa-bitmask)
    (make-numa-bitmask :cpu)
    (make-numa-bitmask :node)
@@ -32,19 +32,22 @@
 	   (let* ((mask (make-random-numa-bitmask mask-type))
 		  (foreign-bmp (convert-to-foreign mask 'numa-bitmask-type))
 		  (new-mask (convert-from-foreign foreign-bmp 'numa-bitmask-type)))
+	     (free-converted-object foreign-bmp 'numa-bitmask-type nil) ; TODO: should be in unwind-protect?
 	     (assert (typep new-mask 'numa-bitmask))
 	     (loop for i across mask
 		for j across new-mask
 		always (= i j)))))
-    (and-assert
+    (assert-progn
      (test-mask-conversion nil)
      (test-mask-conversion :cpu)
      (test-mask-conversion :node)
      (test-mask-conversion 1)
-     (test-mask-conversion 5))))
+     (test-mask-conversion 5)
+     (null (convert-from-foreign (null-pointer) 'numa-bitmask-type))
+     )))
 
 (defun test-binding-internal-cffi-types ()
-  (and-assert
+  (assert-progn
    (cffi-type-exists 'cl-libnuma::libc-return-boolean)
    (convert-from-foreign (convert-to-foreign 0 :int)
    			 'cl-libnuma::libc-return-boolean)
@@ -67,7 +70,17 @@
    (assume-condition ()
      (convert-to-foreign 1 'cl-libnuma::libc-return-int))
    (assume-condition ()
-     (convert-to-foreign -1 'cl-libnuma::libc-return-int))))
+     (convert-to-foreign -1 'cl-libnuma::libc-return-int))
+
+   (cffi-type-exists 'cl-libnuma::malloc-pointer)
+   (null-pointer-p
+    (convert-to-foreign nil 'cl-libnuma::malloc-pointer))
+   (not (convert-from-foreign (null-pointer)
+			      'cl-libnuma::malloc-pointer))
+   (with-foreign-pointer (ptr 1)
+     (let* ((lptr (convert-from-foreign ptr 'cl-libnuma::malloc-pointer))
+	    (mlptr (convert-to-foreign lptr 'cl-libnuma::malloc-pointer)))
+       (and lptr mlptr)))))
 
 (defun test-binding-type ()
   (and (test-binding-cffi-types)

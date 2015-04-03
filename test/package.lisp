@@ -3,7 +3,7 @@
 (defpackage :cl-libnuma.test-util
   (:use :cl :cffi)
   (:export
-   #:and-assert
+   #:assert-progn
    #:assume-condition
    #:always-success
    #:cffi-type-exists

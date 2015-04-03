@@ -3,7 +3,6 @@
 * not implemented features
 
 - [X] Enable to set a callback for numa_error() and numa_warn().
-- [ ] Test above.
 
 - [X] checks libc-semantic return values. 
 
@@ -21,10 +20,22 @@
 - [X] (numa-move-pages: support nodes-list as a bitvector-type)
   Dropped. I mistaken its argument.
 
-- [ ] rewrite smp test with cffi:mem-aref, and boudeaux-threads. 
+- [X] rewrite smp test with cffi:mem-aref, and boudeaux-threads. 
 
 - [X] supply a library name for overriding syntax definitions.
   (RTLD_NEXT, or a library name, or cffi library name (cffi::get-foreign-library) ..)
+
+- [ ] Tests for basic bindings
+
+- [ ] Tests checking whether numa_error() was called or not.
+
+- [ ] malloc-pointer type?
+
+- [ ] make-numa-bitmask should take a 'T' instead of 'NIL'?
+
+- [ ] rewrite layered calls with foreign-funcall
+
+- [ ] Fix:: numa-node-to-cpus with -1 causes segfault.
 
 
 * additional features
@@ -59,4 +70,12 @@
   A trivial issue: manpage doesn't highlight numa_allocate_cpumask()
 
 - numa_pagesize()
-  source says 'not documented', and don't appear at the top of manpage, but description is found!
+  source says 'not documented', and don't appear at the top of
+  manpage, but description is found!
+
+- numa_distance()
+  If arguments are out-of-range, this simply returns an undefined
+  value (which is read from out of the 'distance_table' of libnuma.)
+
+- numa_set_membind()
+  If an error occured, numa_error() is called.
