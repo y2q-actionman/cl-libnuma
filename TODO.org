@@ -25,13 +25,13 @@
 - [X] supply a library name for overriding syntax definitions.
   (RTLD_NEXT, or a library name, or cffi library name (cffi::get-foreign-library) ..)
 
-- [ ] Tests for basic bindings
+- [X] Tests for basic bindings
 
 - [ ] Tests checking whether numa_error() was called or not.
 
-- [ ] malloc-pointer type?
+- [X] malloc-pointer type?
 
-- [ ] make-numa-bitmask should take a 'T' instead of 'NIL'?
+- [X] make-numa-bitmask should take a 'T' instead of 'NIL'?
 
 - [X] (rewrite layered calls with foreign-funcall)
   Dropped. cffi:foreign-funcall cannot convert a minus return value to a minus lisp integer..

@@ -7,19 +7,19 @@
 
 ;; A representation of 'struct bitmask'
 (define-foreign-type libnuma-bitmask-type ()
-  ((specifying :initarg :specifying :initform nil :accessor libnuma-bitmask-type-specifying))
+  ((specifying :initarg :specifying :initform t :accessor libnuma-bitmask-type-specifying))
   (:actual-type :pointer))	 ; (:pointer (:struct struct-bitmask))
 
-(define-parse-method libnuma-bitmask-type (&key (specifying nil))
+(define-parse-method libnuma-bitmask-type (&key (specifying t))
   (ecase specifying
-    ((:cpu :node nil)
+    ((:cpu :node t)
      (make-instance 'libnuma-bitmask-type :specifying specifying))))
 
 (deftype numa-bitmask ()
   "A lisp representation of 'struct bitmask' of libnuma"
   'bit-vector)
 
-(defun make-numa-bitmask (&optional size-spec)
+(defun make-numa-bitmask (&optional (size-spec t))
   (flet ((numa-bitmask-enough-size ()
 	   (max (numa-num-possible-cpus)
 		(numa-num-possible-nodes))))
@@ -27,7 +27,7 @@
 		  (symbol (ecase size-spec
 			    (:cpu (numa-num-configured-cpus))
 			    (:node (numa-num-configured-nodes))
-			    ((nil) (numa-bitmask-enough-size))))
+			    ((t) (numa-bitmask-enough-size))))
 		  (integer size-spec)
 		  (null (numa-bitmask-enough-size)))))
       (make-array `(,size) :element-type 'bit
@@ -37,7 +37,7 @@
   (let ((bmp (ecase (libnuma-bitmask-type-specifying type)
 	       (:cpu (numa-allocate-cpumask*))
 	       (:node (numa-allocate-nodemask*))
-	       ((nil) (numa-bitmask-alloc* (length lisp-bitmask))))))
+	       ((t) (numa-bitmask-alloc* (length lisp-bitmask))))))
     (loop for i from 0 below (length lisp-bitmask)
        when (numa-bitmask-isbitset lisp-bitmask i)
        do (numa-bitmask-setbit* bmp i))
@@ -49,7 +49,7 @@
   (let* ((size-spec (ecase (libnuma-bitmask-type-specifying type)
 		      (:cpu :cpu)
 		      (:node :node)
-		      ((nil) (* +CHAR-BIT+ (numa-bitmask-nbytes* bmp)))))
+		      ((t) (* +CHAR-BIT+ (numa-bitmask-nbytes* bmp)))))
 	 (lisp-bitmask (make-numa-bitmask size-spec)))
     (loop for i from 0 below (length lisp-bitmask)
        when (numa-bitmask-isbitset* bmp i)
