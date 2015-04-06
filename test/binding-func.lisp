@@ -2,10 +2,48 @@
 
 (defun test-numa-parser ()
   ;; numa-parse-bitmap
-  ;; numa-parse-nodestring
-  ;; numa-parse-nodestring-all
-  ;; numa-parse-cpustring
-  ;; numa-parse-cpustring-all
+  ;; This test fully depends on '/sys' filesystem.
+  (loop for i from 0 below (numa-num-configured-nodes)
+     as cpumap-path = (format nil "/sys/devices/system/node/node~D/cpumap" i)
+     do (with-open-file (stream cpumap-path :direction :input)
+	  (let ((cpumap-string (read-line stream)))
+	    (assert (numa-parse-bitmap
+		     (concatenate 'string cpumap-string "
+"))))))
+  (flet ((test-parse-string (func type)
+	   (let ((num-max (ecase type
+			    (:node (numa-num-configured-nodes))
+			    (:cpu (numa-num-configured-cpus)))))
+	     (assert-progn
+	      (if (eq type :node)
+		  (numa-bitmask-equal (funcall func "")
+				      *numa-no-nodes-bitmask*)
+		  t)
+	      (numa-bitmask-equal (funcall func "all")
+				  (ecase type
+				    (:node *numa-all-nodes-bitmask*)
+				    (:cpu *numa-all-cpus-bitmask*)))
+	      (not (funcall func "??")))
+	     ;; using 0
+	     (when (<= 0 num-max)
+	       (assert-progn
+		(typep (funcall func "0") 'numa-bitmask)
+		(typep (funcall func "!0") 'numa-bitmask)
+		(typep (funcall func "+0") 'numa-bitmask)
+		(typep (funcall func "0-0") 'numa-bitmask)))
+	     ;; using 0, 1
+	     (when (<= 1 num-max)
+	       (assert-progn
+		(typep (funcall func "0,1") 'numa-bitmask)
+		(typep (funcall func "0-1") 'numa-bitmask)
+		(typep (funcall func "+0,1") 'numa-bitmask)
+		(typep (funcall func "+0-1") 'numa-bitmask))))))
+    (test-parse-string #'numa-parse-nodestring :node)
+    (when (ignore-errors (numa-parse-nodestring-all ""))
+      (test-parse-string #'numa-parse-nodestring-all :node))
+    (test-parse-string #'numa-parse-cpustring :cpu)
+    (when (ignore-errors (numa-parse-cpustring-all ""))
+      (test-parse-string #'numa-parse-cpustring-all :cpu)))
   t)
 
 (defun test-numa-node-size ()

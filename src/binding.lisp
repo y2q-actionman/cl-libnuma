@@ -113,6 +113,17 @@
 	      (progn ,@body))
        (numa-bitmask-free* ,var))))
 
+(defmacro with-calling-maybe-not-found-function
+    (form (&optional (condition (gensym) condition-supplied-p))
+     &body body)
+  `(handler-case ,form
+     ;; This code assumes a simple-error is reported when the function
+     ;; is not found.
+     (simple-error (,condition)
+       ,(if (not condition-supplied-p)
+	    `(declare (ignorable ,condition)))
+       ,@body)))
+
 
 ;;; Funtions
 
@@ -130,15 +141,12 @@
     :int)
 
 (defun numa-num-possible-cpus ()
-  (handler-case (numa-num-possible-cpus*)
-    ;; This code assumes a simple-error is reported when the function
-    ;; is not exported.
-    (simple-error (condition)
-      (declare (ignore condition))
-      ;; A workaround for numa_num_possible_cpus(), which is not
-      ;; exported until libnuma-2.0.8-rc4.
-      (with-temporal-struct-bitmask-pointer (bmp (numa-allocate-cpumask*))
-	(numa-bitmask-weight* (numa-bitmask-setall* bmp))))))
+  (with-calling-maybe-not-found-function (numa-num-possible-cpus*)
+      ()
+    ;; A workaround for numa_num_possible_cpus(), which is not
+    ;; exported until libnuma-2.0.8-rc4.
+    (with-temporal-struct-bitmask-pointer (bmp (numa-allocate-cpumask*))
+      (numa-bitmask-weight* (numa-bitmask-setall* bmp)))))
 
 
 (defcfun numa-max-node
@@ -185,17 +193,29 @@
     (libnuma-bitmask-type :specifying :node)
   (string :string))
 
-(defcfun numa-parse-nodestring-all
+(defcfun (numa-parse-nodestring-all* "numa_parse_nodestring_all")
     (libnuma-bitmask-type :specifying :node)
   (string :string))
+
+(defun numa-parse-nodestring-all (string)
+  (with-calling-maybe-not-found-function (numa-parse-nodestring-all* string)
+      (condition)
+    (warn "numa_parse_nodestring_all() was added at libnuma-2.0.8-rc5.")
+    (error condition)))
 
 (defcfun numa-parse-cpustring
     (libnuma-bitmask-type :specifying :cpu)
   (string :string))
 
-(defcfun numa-parse-cpustring-all
+(defcfun (numa-parse-cpustring-all* "numa_parse_cpustring_all")
     (libnuma-bitmask-type :specifying :cpu)
   (string :string))
+
+(defun numa-parse-cpustring-all (string)
+  (with-calling-maybe-not-found-function (numa-parse-cpustring-all* string)
+      (condition)
+    (warn "numa_parse_cpustring_all() was added at libnuma-2.0.8-rc5.")
+    (error condition)))
 
 
 (defcfun (numa-node-size* "numa_node_size")
@@ -322,13 +342,10 @@
   (nodemask (libnuma-bitmask-type :specifying :node)))
 
 (defun numa-run-on-node-mask-all (nodemask)
-  (handler-case (numa-run-on-node-mask-all* nodemask)
-    ;; This code assumes a simple-error is reported when the function
-    ;; is not found.
-    (simple-error (condition)
-      ;; This function is added at 2.0.9-rc3
-      (warn "This libnuma does not have numa_run_on_node_mask_all(), added at libnuma-2.0.9-rc3.")
-      (error condition))))
+  (with-calling-maybe-not-found-function (numa-run-on-node-mask-all* nodemask)
+      (condition)
+    (warn "numa_run_on_node_mask_all() was added at libnuma-2.0.9-rc3.")
+    (error condition)))
 
 (defcfun numa-get-run-node-mask
     (libnuma-bitmask-type :specifying :node))
