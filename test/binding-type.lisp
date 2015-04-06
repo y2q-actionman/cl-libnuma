@@ -3,14 +3,12 @@
 ;; types
 (defun test-binding-cffi-types ()
   (assert-progn
-   (cffi-type-exists 'struct-bitmask-pointer)
    (cffi-type-exists 'libnuma-bitmask-type)
    (cffi-type-exists '(libnuma-bitmask-type :specifying :cpu))
    (cffi-type-exists '(libnuma-bitmask-type :specifying :node))
    (cffi-type-exists '(libnuma-bitmask-type :specifying nil))
    (assume-condition ()
      (cffi-type-exists '(libnuma-bitmask-type :specifying 'hoge)))
-   (cffi-type-exists 'nodemask_t-pointer)
    (cffi-type-exists 'mbind-flag)))
 
 (defun test-make-numa-bitmask ()

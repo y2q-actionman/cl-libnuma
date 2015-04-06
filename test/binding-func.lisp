@@ -33,11 +33,16 @@
   (loop for node from 0 below (numa-num-configured-nodes)
      do (numa-set-preferred node)
        (assert (= node (numa-preferred))))
+  ;; special value: -1
+  (numa-set-preferred :local)
+  (assert (integerp (numa-preferred)))
+  (numa-set-preferred -1)
+  (assert (integerp (numa-preferred)))
   ;; out of range
   (let ((orig-preferred (numa-preferred)))
     (numa-set-preferred (numa-num-configured-nodes))
     (assert (= orig-preferred (numa-preferred))))
-  ;; sets default
+  ;; sets default -- numa-set-localalloc
   (numa-set-localalloc)
   (assert (integerp (numa-preferred)))
   t)
@@ -208,6 +213,7 @@
 	      when (numa-bitmask-isbitset orig-mask node)
 	      do (assert (numa-run-on-node node)))
 	   (assert (numa-run-on-node -1)) ; all nodes
+	   (assert (numa-run-on-node :all)) ; all nodes
 	   (macrolet ((test-run-on-node-mask (funcname)
 			`(progn
 			   (loop with tmp-mask = (make-numa-bitmask :node)
@@ -222,8 +228,8 @@
 		 (ignore-errors
 		   (numa-run-on-node-mask-all *numa-all-nodes-bitmask*))
 	       (cond ((and (not ret) condition)
-		      ;; TODO: move this message to main src.
-		      (warn "This libnuma does not supports numa_run_on_node_mask_all()"))
+		      ;; This libnuma does not supports numa_run_on_node_mask_all()
+		      nil)
 		     (t
 		      (test-run-on-node-mask numa-run-on-node-mask-all))))))
       (numa-run-on-node-mask orig-mask)))
@@ -296,69 +302,51 @@
   t)
 
 (defun test-numa-bitmask ()
-  (flet ((test-raw-mask (alloc-func)	; 'struct bitmask*' of libnuma
-	   (let ((mask1 (funcall alloc-func))
-		 (mask2 (funcall alloc-func)))
-	     (unwind-protect
-		  (progn
-		    (when (or (null-pointer-p mask1)
-			      (null-pointer-p mask2))
-		      (warn "numa_bitmask_alloc failed")
-		      (return-from test-raw-mask))
-		    (assert (plusp (numa-bitmask-nbytes* mask1)))
-		    (assert (zerop (numa-bitmask-weight*
-				    (numa-bitmask-clearall* mask1))))
-		    (assert (numa-bitmask-isbitset*
-			     (numa-bitmask-setbit* mask1 0) 0))
-		    (let ((filled-bits (numa-bitmask-weight*
-					(numa-bitmask-setall* mask1))))
-		      (assert (not (numa-bitmask-isbitset*
-				    (numa-bitmask-clearbit* mask1 0) 0)))
-		      (assert (= (1- filled-bits)
-				 (numa-bitmask-weight* mask1))))
-		    (assert (not (numa-bitmask-equal* mask1 mask2)))
-		    (copy-bitmask-to-bitmask* mask1 mask2)
-		    (assert (numa-bitmask-equal* mask1 mask2)))
-	       (when mask1
-		 (numa-bitmask-free* mask1))
-	       (when mask2
-		 (numa-bitmask-free* mask2)))))
-	 (test-lisp-mask (size-spec)	; 'numa-bitmask' of cl-libnuma
-	   (let ((mask1 (make-numa-bitmask size-spec))
-		 (mask2 (make-numa-bitmask size-spec)))
-	     (assert (plusp (numa-bitmask-nbytes mask1)))
-	     (numa-bitmask-clearall mask1)
-	     (assert (zerop (numa-bitmask-weight mask1)))
-	     (numa-bitmask-setbit mask1 0)
-	     (assert (numa-bitmask-isbitset mask1 0))
-	     (numa-bitmask-setall mask1)
-	     (let ((filled-bits (numa-bitmask-weight mask1)))
-	       (numa-bitmask-clearbit mask1 0)
-	       (assert (not (numa-bitmask-isbitset mask1 0)))
-	       (assert (= (1- filled-bits)
-			  (numa-bitmask-weight mask1))))
-	     (assert (not (numa-bitmask-equal mask1 mask2)))
-	     (map-into mask2 #'identity mask1)
-	     (assert (numa-bitmask-equal mask1 mask2)))))
-    (test-raw-mask #'numa-allocate-nodemask*)
-    (test-raw-mask #'numa-allocate-cpumask*)
-    (test-raw-mask #'(lambda () (numa-bitmask-alloc* 32)))
-    (test-lisp-mask :cpu)
-    (test-lisp-mask :node))
+  (macrolet ((test-scenario (mask1-val mask2-val suffix)
+	       (flet ((nb (name)
+			(find-symbol (concatenate 'string "NUMA-BITMASK-" (symbol-name name) suffix) :cl-libnuma))
+		      (copier ()
+			(find-symbol (concatenate 'string "COPY-BITMASK-TO-BITMASK" suffix) :cl-libnuma)))
+		 (let ((mask1 (gensym)) (mask2 (gensym)))
+		   `(let ((,mask1 ,mask1-val)
+			  (,mask2 ,mask2-val))
+		      (assert (plusp (,(nb 'nbytes) ,mask1)))
+		      (assert (zerop (,(nb 'weight)
+		      		       (,(nb 'clearall) ,mask1))))
+		      (assert (,(nb 'isbitset)
+		      		(,(nb 'setbit) ,mask1 0) 0))
+		      (let ((filled-bits (,(nb 'weight)
+		      			   (,(nb 'setall) ,mask1))))
+		      	(assert (not (,(nb 'isbitset)
+		      		       (,(nb 'clearbit) ,mask1 0) 0)))
+		      	(assert (= (1- filled-bits)
+		      		   (,(nb 'weight) ,mask1))))
+		      (assert (not (,(nb 'equal) ,mask1 ,mask2)))
+		      (,(copier) ,mask1 ,mask2)
+		      (assert (,(nb 'equal) ,mask1 ,mask2)))))))
+    (flet ((test-raw-mask (alloc-func)	; 'struct bitmask*' of libnuma
+	     (cl-libnuma::with-temporal-struct-bitmask-pointer (mask1 (funcall alloc-func))
+	       (cl-libnuma::with-temporal-struct-bitmask-pointer (mask2 (funcall alloc-func))
+		 (test-scenario mask1 mask2 "*"))))
+	   (test-lisp-mask (size-spec)	; 'numa-bitmask' of cl-libnuma
+	     (test-scenario (make-numa-bitmask size-spec) (make-numa-bitmask size-spec) "")))
+      (test-raw-mask #'cl-libnuma::numa-allocate-nodemask*)
+      (test-raw-mask #'cl-libnuma::numa-allocate-cpumask*)
+      (test-raw-mask #'(lambda () (cl-libnuma::numa-bitmask-alloc* 32)))
+      (test-lisp-mask :cpu)
+      (test-lisp-mask :node)))
   ;; nodemask_t
-  (let* ((lisp-mask1 (make-random-numa-bitmask :node))
-	 (raw-mask1 (convert-to-foreign lisp-mask1 '(libnuma-bitmask-type :specifying :node)))
-	 (raw-mask2 (numa-allocate-nodemask*))
-	 lisp-mask2)
-    (unwind-protect
-	 (with-foreign-object (nodemask1 '(:struct cl-libnuma.grovel::nodemask_t))
-	   (copy-bitmask-to-nodemask* raw-mask1 nodemask1)
-	   (copy-nodemask-to-bitmask* nodemask1 raw-mask2)
-	   (setf lisp-mask2
-		 (convert-from-foreign raw-mask2 '(libnuma-bitmask-type :specifying :node)))
-	   (assert (equal lisp-mask1 lisp-mask2)))
-      (numa-free-nodemask* raw-mask2)
-      (free-converted-object raw-mask1 'libnuma-bitmask-type nil)))
+  (let ((lisp-mask1 (make-random-numa-bitmask :node)))
+    (cl-libnuma::with-temporal-struct-bitmask-pointer
+	(raw-mask1 (convert-to-foreign lisp-mask1 '(libnuma-bitmask-type :specifying :node)))
+      (cl-libnuma::with-temporal-struct-bitmask-pointer
+	  (raw-mask2 (cl-libnuma::numa-allocate-nodemask*))
+	(with-foreign-object (nodemask1 '(:struct cl-libnuma.grovel::nodemask_t))
+	  (cl-libnuma::copy-bitmask-to-nodemask* raw-mask1 nodemask1)
+	  (cl-libnuma::copy-nodemask-to-bitmask* nodemask1 raw-mask2)
+	  (let ((lisp-mask2
+		 (convert-from-foreign raw-mask2 '(libnuma-bitmask-type :specifying :node))))
+	    (assert (equal lisp-mask1 lisp-mask2)))))))
   t)
 
 (defun test-numa-move-pages (&optional (count 16))

@@ -33,7 +33,9 @@
 
 - [ ] make-numa-bitmask should take a 'T' instead of 'NIL'?
 
-- [ ] rewrite layered calls with foreign-funcall
+- [X] (rewrite layered calls with foreign-funcall)
+  Dropped. cffi:foreign-funcall cannot convert a minus return value to a minus lisp integer..
+  See 'cffi bugs' below.
 
 - [ ] Fix:: numa-node-to-cpus with -1 causes segfault.
 
@@ -74,8 +76,60 @@
   manpage, but description is found!
 
 - numa_distance()
-  If arguments are out-of-range, this simply returns an undefined
-  value (which is read from out of the 'distance_table' of libnuma.)
+  If arguments are out-of-range, this silently fails and returns an
+  undefined value. (which is read from out of the 'distance_table' of
+  libnuma.)
 
 - numa_set_membind()
   If an error occured, numa_error() is called.
+
+* cffi bugs
+** On Allegro 9.0 64-bit smp, cffi:foreign-funcall cannot treat a minus return value.
+
+#+BEGIN_SRC lisp
+  ;; numa_node_size(-1, NULL) returns -1.
+  
+  ;; using defcfun
+  CL-LIBNUMA> (defcfun (%numa-node-size "numa_node_size")
+      :long
+    (node :int)
+    (freep (:pointer :long)))
+  
+  %NUMA-NODE-SIZE
+  CL-LIBNUMA> (%numa-node-size -1 (null-pointer))
+  -1
+  CL-LIBNUMA> 
+  
+  ;; using foreign-funcall
+  CL-LIBNUMA> (foreign-funcall "numa_node_size" :int -1 :pointer (null-pointer) :long)
+  
+  18446744073709551615
+#+END_SRC
+
+This is caused by 'system::ff-funcall usage.
+
+The code ~foreign-funcall~ generates:
+#+BEGIN_SRC 
+CL-LIBNUMA> (SYSTEM::FF-FUNCALL (LOAD-TIME-VALUE (EXCL::DETERMINE-FOREIGN-ADDRESS
+                                          '("numa_node_size" :LANGUAGE :C)
+                                          FOREIGN-FUNCTIONS::EP-FLAG-ALWAYS-RELEASE
+                                          NIL))
+                        '(:INT (SIGNED-BYTE 32)) -1
+                        '(:FOREIGN-ADDRESS) (null-pointer)
+                        '(:LONG (SIGNED-BYTE 64)))
+18446744073709551615
+#+END_SRC
+
+The code ~defcfun~ and ~ff:def-foreign-call~ of Allegro generates:
+#+BEGIN_SRC 
+CL-LIBNUMA> (SYSTEM::FF-FUNCALL (LOAD-TIME-VALUE (EXCL::DETERMINE-FOREIGN-ADDRESS
+                                          '("numa_node_size" :LANGUAGE :C)
+                                          FOREIGN-FUNCTIONS::EP-FLAG-ALWAYS-RELEASE
+                                          NIL))
+                        '(:INT (SIGNED-BYTE 32)) -1
+                        '(:FOREIGN-ADDRESS) (null-pointer)
+                        '(:LONG (INTEGER -9223372036854775808 9223372036854775807)))
+-1
+#+END_SRC
+
+So, Can I fix this problem with changing from ~(signed-byte 64)~ to ~(integer -9223372036854775808 9223372036854775807)~ ?
