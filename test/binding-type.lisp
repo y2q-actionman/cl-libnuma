@@ -4,12 +4,12 @@
 (defun test-binding-cffi-types ()
   (assert-progn
    (cffi-type-exists 'struct-bitmask-pointer)
-   (cffi-type-exists 'numa-bitmask-type)
-   (cffi-type-exists '(numa-bitmask-type :specifying :cpu))
-   (cffi-type-exists '(numa-bitmask-type :specifying :node))
-   (cffi-type-exists '(numa-bitmask-type :specifying nil))
+   (cffi-type-exists 'libnuma-bitmask-type)
+   (cffi-type-exists '(libnuma-bitmask-type :specifying :cpu))
+   (cffi-type-exists '(libnuma-bitmask-type :specifying :node))
+   (cffi-type-exists '(libnuma-bitmask-type :specifying nil))
    (assume-condition ()
-     (cffi-type-exists '(numa-bitmask-type :specifying 'hoge)))
+     (cffi-type-exists '(libnuma-bitmask-type :specifying 'hoge)))
    (cffi-type-exists 'nodemask_t-pointer)
    (cffi-type-exists 'mbind-flag)))
 
@@ -30,9 +30,9 @@
 (defun test-numa-bitmask-conversion ()
   (flet ((test-mask-conversion (mask-type)
 	   (let* ((mask (make-random-numa-bitmask mask-type))
-		  (foreign-bmp (convert-to-foreign mask 'numa-bitmask-type))
-		  (new-mask (convert-from-foreign foreign-bmp 'numa-bitmask-type)))
-	     (free-converted-object foreign-bmp 'numa-bitmask-type nil) ; TODO: should be in unwind-protect?
+		  (foreign-bmp (convert-to-foreign mask 'libnuma-bitmask-type))
+		  (new-mask (convert-from-foreign foreign-bmp 'libnuma-bitmask-type)))
+	     (free-converted-object foreign-bmp 'libnuma-bitmask-type nil) ; TODO: should be in unwind-protect?
 	     (assert (typep new-mask 'numa-bitmask))
 	     (loop for i across mask
 		for j across new-mask
@@ -43,7 +43,7 @@
      (test-mask-conversion :node)
      (test-mask-conversion 1)
      (test-mask-conversion 5)
-     (null (convert-from-foreign (null-pointer) 'numa-bitmask-type))
+     (null (convert-from-foreign (null-pointer) 'libnuma-bitmask-type))
      )))
 
 (defun test-binding-internal-cffi-types ()

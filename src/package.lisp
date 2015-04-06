@@ -29,7 +29,7 @@
 
    ;; types
    #:struct-bitmask-pointer		; cffi type
-   #:numa-bitmask-type 			; cffi type
+   #:libnuma-bitmask-type		; cffi type
    #:numa-bitmask
    #:nodemask_t-pointer			; cffi type
    #:mbind-flag				; cffi type

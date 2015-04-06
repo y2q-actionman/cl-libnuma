@@ -70,7 +70,8 @@
       (warn "numa-alloc failed")
       (return-from test-numa-interleave-memory t))
     (unwind-protect
-	 (assert-progn
+	 ;; TODO: On error cases, checks whether numa_error() was called or not.
+	 (progn
 	  (when (find 1 (numa-get-interleave-mask))
 	    (numa-interleave-memory memory size (numa-get-interleave-mask)))
 	  (numa-interleave-memory memory size *numa-all-nodes-bitmask*)
@@ -221,6 +222,7 @@
 		 (ignore-errors
 		   (numa-run-on-node-mask-all *numa-all-nodes-bitmask*))
 	       (cond ((and (not ret) condition)
+		      ;; TODO: move this message to main src.
 		      (warn "This libnuma does not supports numa_run_on_node_mask_all()"))
 		     (t
 		      (test-run-on-node-mask numa-run-on-node-mask-all))))))
@@ -345,7 +347,7 @@
     (test-lisp-mask :node))
   ;; nodemask_t
   (let* ((lisp-mask1 (make-random-numa-bitmask :node))
-	 (raw-mask1 (convert-to-foreign lisp-mask1 '(numa-bitmask-type :specifying :node)))
+	 (raw-mask1 (convert-to-foreign lisp-mask1 '(libnuma-bitmask-type :specifying :node)))
 	 (raw-mask2 (numa-allocate-nodemask*))
 	 lisp-mask2)
     (unwind-protect
@@ -353,10 +355,10 @@
 	   (copy-bitmask-to-nodemask* raw-mask1 nodemask1)
 	   (copy-nodemask-to-bitmask* nodemask1 raw-mask2)
 	   (setf lisp-mask2
-		 (convert-from-foreign raw-mask2 '(numa-bitmask-type :specifying :node)))
+		 (convert-from-foreign raw-mask2 '(libnuma-bitmask-type :specifying :node)))
 	   (assert (equal lisp-mask1 lisp-mask2)))
       (numa-free-nodemask* raw-mask2)
-      (free-converted-object raw-mask1 'numa-bitmask-type nil)))
+      (free-converted-object raw-mask1 'libnuma-bitmask-type nil)))
   t)
 
 (defun test-numa-move-pages (&optional (count 16))

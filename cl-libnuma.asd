@@ -18,7 +18,8 @@
      (:file "library")
      (cffi-grovel:grovel-file "grovelling")
      (cffi-grovel:wrapper-file "wrapping")
-     (:file "binding")))))
+     (:file "binding"))))
+  :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.test)))) 
 
 (defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma)) &rest args &key &allow-other-keys)
   (declare (ignore args))
@@ -42,8 +43,9 @@ All functions without numa-avaliable are undefined.")))
      (:file "grovel" :depends-on ("util"))
      (:file "binding-type" :depends-on ("util"))
      (:file "binding-func" :depends-on ("util"))
-     (:file "main" :depends-on ("grovel" "binding-type")))
-     )))
+     (:file "main" :depends-on ("grovel" "binding-type")))))
+  :perform (asdf:test-op (o s)
+			 (uiop:symbol-call '#:cl-libnuma.test '#:main)))
 
 (asdf:defsystem :cl-libnuma.ext-error
   ;; :description ""
