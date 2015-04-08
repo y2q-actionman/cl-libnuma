@@ -1,4 +1,4 @@
-(cl:in-package :cl-libnuma.wrapper-syntax)
+(in-package :cl-libnuma.wrapper-syntax)
 
 ;; Switch
 (defparameter *next-library-default* nil)

@@ -21,7 +21,8 @@
      (:file "binding"))))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.test)))) 
 
-(defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma)) &rest args &key &allow-other-keys)
+(defmethod asdf:operate :after ((operate (eql 'asdf:load-op)) (component (eql :cl-libnuma))
+				&rest args &key &allow-other-keys)
   (declare (ignore args))
   (when (/= (symbol-value (find-symbol "+LIBNUMA-API-VERSION+" :cl-libnuma.grovel))
 	    (symbol-value (find-symbol "+CL-LIBNUMA-TARGET-API-VERSION+" :cl-libnuma)))
@@ -32,7 +33,7 @@ All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.test
   ;; :description ""
-  ;; :license "GNU Lesser GPL v 2.1"  ; == same as libnuma ???
+  ;; :license ""
   ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cl-libnuma)
   :components
@@ -43,13 +44,13 @@ All functions without numa-avaliable are undefined.")))
      (:file "grovel" :depends-on ("util"))
      (:file "binding-type" :depends-on ("util"))
      (:file "binding-func" :depends-on ("util"))
-     (:file "main" :depends-on ("grovel" "binding-type")))))
+     (:file "main" :depends-on ("grovel" "binding-type" "binding-func")))))
   :perform (asdf:test-op (o s)
 			 (uiop:symbol-call '#:cl-libnuma.test '#:main)))
 
 (asdf:defsystem :cl-libnuma.ext-error
   ;; :description ""
-  ;; :license "GNU Lesser GPL v 2.1"  ; == same as libnuma ???
+  ;; :license ""
   ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cl-libnuma)
   :components
@@ -58,4 +59,21 @@ All functions without numa-avaliable are undefined.")))
     :components
     ((:file "package")
      (:file "wrapper-syntax")
-     (cffi-grovel:wrapper-file "wrapping")))))
+     (cffi-grovel:wrapper-file "wrapping"))))
+  :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.ext-error.test))))
+
+(asdf:defsystem :cl-libnuma.ext-error.test
+  ;; :description ""
+  ;; :license ""
+  ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
+  :depends-on (:cl-libnuma.ext-error :cl-libnuma.test)
+  :components
+  ((:module "ext_error_test"
+    :serial t
+    :components
+    ((:file "package")
+     (:file "wrapper-syntax-test")
+     (:file "test-callback")
+     (:file "main"))))
+  :perform (asdf:test-op (o s)
+			 (uiop:symbol-call '#:cl-libnuma.ext-error.test '#:main)))
