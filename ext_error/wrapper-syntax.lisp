@@ -68,7 +68,8 @@
 	   (c-lines (or c-lines
 			;; default -- simply calls the callback.
 			(list (format nil "return (*~A)(~{~A~^, ~});"
-				      c-callback-variable-name fargnames)))))
+				      c-callback-variable-name
+				      (if variadic (butlast fargnames) fargnames))))))
       ;; C code
       (format out "~A (*~A)();~%~%" ; callback pointer
 	      fret-c-name c-callback-variable-name)
@@ -139,6 +140,8 @@
 				args nil))
 
 (cffi-grovel::define-wrapper-syntax cffi-grovel::define-overriding-callback*
-    (nameopts rettype args &rest c-lines)
+    (nameopts rettype args c-lines &optional c-lines-no-callback)
+  ;; TODO: implement c-lines-no-callback
+  (declare (ignore c-lines-no-callback))
   (generate-overriding-callback cffi-grovel::out nameopts rettype
 				args c-lines))

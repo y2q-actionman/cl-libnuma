@@ -19,17 +19,16 @@
 
 (define-overriding-callback* ("numa_warn"
 			      :c-callback-variable-name "numa_warn_callback"
-			      ;; Because numa_warn() is variadic, no way to pass args directly..
-			      :next-library nil)
+			      :next-library nil) ; Because numa_warn() is variadic, no way to pass args directly..
     :void
   ((num :int) (fmt :string) &rest)
-  "char buffer[NUMA_WARN_BUFFER_SIZE];"
-  "va_list ap;"
-  "int eno = errno;"
-  ""
-  "va_start(ap, fmt);"
-  "vsnprintf(buffer, sizeof(buffer), fmt, ap);"
-  "va_end(ap);"
-  "errno = eno;"
-  "return (*numa_warn_callback)(num, buffer);"
+  ("char buffer[NUMA_WARN_BUFFER_SIZE];"
+   "va_list ap;"
+   "int eno = errno;"
+   ""
+   "va_start(ap, fmt);"
+   "vsnprintf(buffer, sizeof(buffer), fmt, ap);"
+   "va_end(ap);"
+   "errno = eno;"
+   "return (*numa_warn_callback)(num, buffer);")
   )
