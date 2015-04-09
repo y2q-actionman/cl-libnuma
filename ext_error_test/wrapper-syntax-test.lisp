@@ -1,43 +1,51 @@
 (in-package :cl-libnuma.wrapper-syntax.test)
 
 (defun test-parse-overriding-callback-name ()
-  (let* ((wrapper-suffix-c cl-libnuma.wrapper-syntax::+overriding-callback-suffix+)
-	 (wrapper-suffix-lisp
-	  (string-upcase (substitute #\- #\_ wrapper-suffix-c)))
-	 (test-foreign-name "hoge_fuga_piyo"))
+  ;; because using 'cffi::lisp-name'
+  (let ((*package* (find-package :cl-libnuma.wrapper-syntax.test)))
     (multiple-value-bind (c-overriden-function-name
-			  c-callback-variable-name
 			  lisp-callback-variable-name
-			  next-library)
-	(cl-libnuma.wrapper-syntax::parse-overriding-callback-name test-foreign-name)
+			  c-trampoline-variable-name
+			  lisp-trampoline-function-name)
+	(cl-libnuma.wrapper-syntax::parse-overriding-callback-name "hoge_fuga_piyo")
       (assert-progn
        (stringp c-overriden-function-name)
-       (equal c-overriden-function-name test-foreign-name)
+       (equal c-overriden-function-name "hoge_fuga_piyo")
        (symbolp lisp-callback-variable-name)
-       (equal (symbol-name lisp-callback-variable-name)
-	      (format nil "*HOGE-FUGA-PIYO~A*" wrapper-suffix-lisp))
-       (stringp c-callback-variable-name)
-       (equal c-callback-variable-name
-	      (format nil "hoge_fuga_piyo~A" wrapper-suffix-c))
-       (equal next-library *next-library-default*)))
-    (let ((test-lisp-callback-name 'hoge-callback-lisp)
-	  (test-c-callback-name "hoge-callback-c")
-	  (test-next-library "hoge-library"))
-      (multiple-value-bind (c-overriden-function-name
-			    c-callback-variable-name
-			    lisp-callback-variable-name
-			    next-library)
-	  (cl-libnuma.wrapper-syntax::parse-overriding-callback-name
-	   `(,test-foreign-name
-	     :lisp-callback-variable-name ,test-lisp-callback-name
-	     :c-callback-variable-name ,test-c-callback-name
-	     :next-library ,test-next-library))
-	(assert-progn
-	 (equal c-overriden-function-name test-foreign-name)
-	 (equal lisp-callback-variable-name test-lisp-callback-name)
-	 (equal c-callback-variable-name test-c-callback-name)
-	 (equal next-library test-next-library)))))
-  t)
+       (equal lisp-callback-variable-name '*HOGE-FUGA-PIYO*)
+       (stringp c-trampoline-variable-name)
+       (equal c-trampoline-variable-name "hoge_fuga_piyo_trampoline")
+       (symbolp lisp-trampoline-function-name)
+       (equal lisp-trampoline-function-name 'HOGE-FUGA-PIYO-TRAMPOLINE)))
+    (multiple-value-bind (c-overriden-function-name
+			  lisp-callback-variable-name
+			  c-trampoline-variable-name
+			  lisp-trampoline-function-name)
+	(cl-libnuma.wrapper-syntax::parse-overriding-callback-name '*hoge-fuga-piyo*)
+      (assert-progn
+       (stringp c-overriden-function-name)
+       (equal c-overriden-function-name "hoge_fuga_piyo")
+       (symbolp lisp-callback-variable-name)
+       (equal lisp-callback-variable-name '*HOGE-FUGA-PIYO*)
+       (stringp c-trampoline-variable-name)
+       (equal c-trampoline-variable-name "hoge_fuga_piyo_trampoline")
+       (symbolp lisp-trampoline-function-name)
+       (equal lisp-trampoline-function-name 'HOGE-FUGA-PIYO-TRAMPOLINE)))
+    (multiple-value-bind (c-overriden-function-name
+			  lisp-callback-variable-name
+			  c-trampoline-variable-name
+			  lisp-trampoline-function-name)
+	(cl-libnuma.wrapper-syntax::parse-overriding-callback-name
+	 `(:c-overriden-function-name "test-c-o-f-n"
+	   :lisp-callback-variable-name test-l-c-v-n
+	   :c-trampoline-variable-name "test-c-t-v-n"
+	   :lisp-trampoline-function-name test-t-f-n))
+      (assert-progn
+       (equal c-overriden-function-name "test-c-o-f-n")
+       (equal lisp-callback-variable-name 'test-l-c-v-n)
+       (equal c-trampoline-variable-name "test-c-t-v-n")
+       (equal lisp-trampoline-function-name 'test-t-f-n)))
+    t))
 
 ;; TODO: add 'define-overriding-callback' test, especially for 'next-library' usage.
 

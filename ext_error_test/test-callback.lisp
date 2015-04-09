@@ -3,20 +3,20 @@
 (defparameter *numa-error-called* nil)
 (defparameter *numa-warn-called* nil)
 
-(defcallback numa-error-test-callback :void ((where :string))
+(defun numa-error-test-callback (where)
   (setf *numa-error-called* (or where t)))
 
-(defcallback numa-warn-test-callback :void ((number :int) (where :string))
+(defun numa-warn-test-callback (number where)
   (declare (ignore number))
   (setf *numa-warn-called* (or where t)))
 
 (defun install-test-callback ()
-  (setf *numa-error-callback* (callback numa-error-test-callback)
-	*numa-warn-callback* (callback numa-warn-test-callback)))
+  (setf *numa-error* #'numa-error-test-callback
+	*numa-warn* #'numa-warn-test-callback))
 
 (defun uninstall-test-callback ()
-  (setf *numa-error-callback* (null-pointer)
-	*numa-warn-callback* (null-pointer)))
+  (setf *numa-error* nil
+	*numa-warn* nil))
 
 (defmacro with-test-callback (() &body body)
   `(let ((*numa-error-called* nil)

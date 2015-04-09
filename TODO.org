@@ -37,8 +37,8 @@
   Dropped. cffi:foreign-funcall cannot convert a minus return value to a minus lisp integer..
   See 'cffi bugs' below.
 
-- [ ] Fix:: numa-node-to-cpus with -1 causes segfault.
-
+- [X] (Use cffi:foreign-funcall for finding alternative function in define-overriding-callback)
+  Dropped. I eliminated facilities for calling a 'next' function.
 
 * additional features
 
@@ -51,6 +51,8 @@
 
 - [X] checks libnuma version?
   for numa-num-possible-cpus
+
+- [ ] Fix for libnuma: numa-node-to-cpus with -1 causes segfault.
 
 
 * libnuma manpage bugs
@@ -109,7 +111,7 @@
 This is caused by 'system::ff-funcall usage.
 
 The code ~foreign-funcall~ generates:
-#+BEGIN_SRC 
+#+BEGIN_EXAMPLE
 CL-LIBNUMA> (SYSTEM::FF-FUNCALL (LOAD-TIME-VALUE (EXCL::DETERMINE-FOREIGN-ADDRESS
                                           '("numa_node_size" :LANGUAGE :C)
                                           FOREIGN-FUNCTIONS::EP-FLAG-ALWAYS-RELEASE
@@ -118,10 +120,10 @@ CL-LIBNUMA> (SYSTEM::FF-FUNCALL (LOAD-TIME-VALUE (EXCL::DETERMINE-FOREIGN-ADDRES
                         '(:FOREIGN-ADDRESS) (null-pointer)
                         '(:LONG (SIGNED-BYTE 64)))
 18446744073709551615
-#+END_SRC
+#+END_EXAMPLE
 
 The code ~defcfun~ and ~ff:def-foreign-call~ of Allegro generates:
-#+BEGIN_SRC 
+#+BEGIN_EXAMPLE
 CL-LIBNUMA> (SYSTEM::FF-FUNCALL (LOAD-TIME-VALUE (EXCL::DETERMINE-FOREIGN-ADDRESS
                                           '("numa_node_size" :LANGUAGE :C)
                                           FOREIGN-FUNCTIONS::EP-FLAG-ALWAYS-RELEASE
@@ -130,6 +132,7 @@ CL-LIBNUMA> (SYSTEM::FF-FUNCALL (LOAD-TIME-VALUE (EXCL::DETERMINE-FOREIGN-ADDRES
                         '(:FOREIGN-ADDRESS) (null-pointer)
                         '(:LONG (INTEGER -9223372036854775808 9223372036854775807)))
 -1
-#+END_SRC
+#+END_EXAMPLE
 
-So, Can I fix this problem with changing from ~(signed-byte 64)~ to ~(integer -9223372036854775808 9223372036854775807)~ ?
+So, Can I fix this problem with changing from ~(signed-byte 64)~ to
+~(integer -9223372036854775808 9223372036854775807)~ ?

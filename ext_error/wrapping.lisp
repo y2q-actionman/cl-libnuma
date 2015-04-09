@@ -2,7 +2,7 @@
 
 (include "numa.h")
 
-(define-overriding-callback ("numa_error" :next-library cl-libnuma:libnuma)
+(define-overriding-callback "numa_error"
     :void
   (where :string))
 
@@ -17,9 +17,8 @@
 
 (define NUMA_WARN_BUFFER_SIZE 256)
 
-(define-overriding-callback* ("numa_warn"
-			      :c-callback-variable-name "numa_warn_callback"
-			      :next-library nil) ; Because numa_warn() is variadic, no way to pass args directly..
+(define-overriding-callback* (:c-overriden-function-name "numa_warn"
+			      :c-trampoline-variable-name "numa_warn_trampoline")
     :void
   ((num :int) (fmt :string) &rest)
   ("char buffer[NUMA_WARN_BUFFER_SIZE];"
@@ -30,5 +29,5 @@
    "vsnprintf(buffer, sizeof(buffer), fmt, ap);"
    "va_end(ap);"
    "errno = eno;"
-   "return (*numa_warn_callback)(num, buffer);")
+   "return (*numa_warn_trampoline)(num, buffer);")
   )
