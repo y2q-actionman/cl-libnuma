@@ -443,22 +443,6 @@
       (assert (numa-migrate-pages 0 mask1 mask2))))
   t)
 
-(defun test-numa-error ()
-  (macrolet ((try-call (switch-var func-name &rest func-args)
-	       `(let ((old-value ,switch-var))
-		  (unwind-protect
-		       (always-success
-			 (setf ,switch-var nil)
-			 (,func-name ,@func-args))
-		    (setf ,switch-var old-value)))))
-    (assert-progn
-     (typep *numa-exit-on-error* 'boolean)
-     (typep *numa-exit-on-warn* 'boolean)
-     (try-call *numa-exit-on-error*
-	       numa-error "hoge")
-     (try-call *numa-exit-on-warn*
-	       numa-warn 0 "hoge"))))
-
 (defun test-binding-func ()
   (assert-progn
    (typep (numa-available) 'boolean)
@@ -513,8 +497,6 @@
    (test-numa-move-pages)
 
    (test-numa-migrate-pages)
-
-   (test-numa-error)
 
    (integerp (numa-pagesize))
    ))

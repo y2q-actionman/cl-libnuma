@@ -3,4 +3,5 @@
 (defun main ()
   (and (cl-libnuma.wrapper-syntax.test::test-wrapper-syntax)
        (test-callback-available?)
+       (test-numa-error)
        t))

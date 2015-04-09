@@ -15,22 +15,20 @@
 
 ;; Syntax definitions
 (defun parse-overriding-callback-name (nameopts)
-  "Returns: (values <c-overriden-function-name> <lisp-callback-variable-name>
-                    <c-callback-variable-name> <next-library>)"
+  "Returns: (values <c-overriden-function-name> <c-callback-variable-name>
+        <lisp-callback-variable-name> <next-library>)"
   (flet ((generate-results
 	     (c-overriden-function-name
 	      &key
-	      (lisp-callback-variable-name
-	       (cffi::lisp-name (cffi-grovel::strcat c-overriden-function-name
-						     +overriding-callback-suffix+)
-				t))
 	      (c-callback-variable-name
-	       (cffi-grovel::strcat c-overriden-function-name
-				    +overriding-callback-suffix+))
+	       (concatenate 'string c-overriden-function-name
+			    +overriding-callback-suffix+))
+	      (lisp-callback-variable-name
+	       (cffi::lisp-name c-callback-variable-name t))
 	      (next-library *next-library-default*))
 	   (values c-overriden-function-name
-		   lisp-callback-variable-name
 		   c-callback-variable-name
+		   lisp-callback-variable-name
 		   next-library)))
     (etypecase nameopts
       (string				; foreign-name
@@ -40,8 +38,8 @@
 
 (defun generate-overriding-callback (out nameopts rettype args c-lines)
   (multiple-value-bind (c-overriden-function-name
-			lisp-callback-variable-name 
 			c-callback-variable-name
+			lisp-callback-variable-name 
 			next-library)
       (parse-overriding-callback-name nameopts)
     (when *print-error-message*

@@ -113,10 +113,8 @@
    #:numa-move-pages
    #:numa-migrate-pages
 
-   #:numa-error
    #:*numa-exit-on-error*
    #:*numa-exit-on-warn*
-   #:numa-warn
 
    #:numa-pagesize
    ))

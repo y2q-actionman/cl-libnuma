@@ -6,8 +6,9 @@
 	  (string-upcase (substitute #\- #\_ wrapper-suffix-c)))
 	 (test-foreign-name "hoge_fuga_piyo"))
     (multiple-value-bind (c-overriden-function-name
+			  c-callback-variable-name
 			  lisp-callback-variable-name
-			  c-callback-variable-name next-library)
+			  next-library)
 	(cl-libnuma.wrapper-syntax::parse-overriding-callback-name test-foreign-name)
       (assert-progn
        (stringp c-overriden-function-name)
@@ -23,8 +24,9 @@
 	  (test-c-callback-name "hoge-callback-c")
 	  (test-next-library "hoge-library"))
       (multiple-value-bind (c-overriden-function-name
+			    c-callback-variable-name
 			    lisp-callback-variable-name
-			    c-callback-variable-name next-library)
+			    next-library)
 	  (cl-libnuma.wrapper-syntax::parse-overriding-callback-name
 	   `(,test-foreign-name
 	     :lisp-callback-variable-name ,test-lisp-callback-name

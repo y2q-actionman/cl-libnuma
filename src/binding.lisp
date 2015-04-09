@@ -572,21 +572,11 @@
   (tonodes (libnuma-bitmask-type :specifying :node)))
 
 
-(defcfun numa-error
-    :void
-  (where :string))
-
 (defcvar *numa-exit-on-error*
     (:boolean :int))
 
 (defcvar *numa-exit-on-warn*
     (:boolean :int))
-
-(defcfun numa-warn
-    :void
-  (number :int)
-  (where :string)
-  &rest)
 
 
 (defcfun numa-pagesize

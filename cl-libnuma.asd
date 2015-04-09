@@ -17,7 +17,7 @@
     ((:file "package")
      (:file "library")
      (cffi-grovel:grovel-file "grovelling")
-     (cffi-grovel:wrapper-file "wrapping")
+     (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-wrapping")
      (:file "binding"))))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.test)))) 
 
@@ -59,7 +59,8 @@ All functions without numa-avaliable are undefined.")))
     :components
     ((:file "package")
      (:file "wrapper-syntax")
-     (cffi-grovel:wrapper-file "wrapping"))))
+     (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-ext-error-wrapping")
+     (:file "binding"))))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.ext-error.test))))
 
 (asdf:defsystem :cl-libnuma.ext-error.test
@@ -74,6 +75,7 @@ All functions without numa-avaliable are undefined.")))
     ((:file "package")
      (:file "wrapper-syntax-test")
      (:file "test-callback")
+     (:file "binding")
      (:file "main"))))
   :perform (asdf:test-op (o s)
 			 (uiop:symbol-call '#:cl-libnuma.ext-error.test '#:main)))
