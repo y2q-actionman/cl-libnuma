@@ -71,7 +71,7 @@
 
       ;; lisp code
       (when variadic
-	(warn "Overiding a varidic function is not straight forward. Please use define-wrapper-syntax* carefully."))
+	(warn "Overriding a varidic function is not straight-forward. Please use define-wrapper-syntax* carefully."))
       (push `(progn
 	       (cl:defparameter ,lisp-callback-variable-name nil)
 	       (cffi:defcvar (,lisp-trampoline-function-name ,c-trampoline-variable-name)

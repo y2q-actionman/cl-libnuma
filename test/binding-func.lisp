@@ -498,5 +498,8 @@
 
    (test-numa-migrate-pages)
 
+   (typep *numa-exit-on-error* 'boolean)
+   (typep *numa-exit-on-warn* 'boolean)
+
    (integerp (numa-pagesize))
    ))

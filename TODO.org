@@ -40,6 +40,9 @@
 - [X] (Use cffi:foreign-funcall for finding alternative function in define-overriding-callback)
   Dropped. I eliminated facilities for calling a 'next' function.
 
+- [ ] Report a condition when numa_error() is called.
+  numa-error -> serious-condition, numa-warn -> warning.
+
 * additional features
 
 - [X] (Should I make 'getpid' ready?)
