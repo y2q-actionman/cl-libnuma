@@ -43,6 +43,8 @@
 - [ ] Report a condition when numa_error() is called.
   numa-error -> serious-condition, numa-warn -> warning.
 
+- [ ] Only supply a restart for ~numa-num-possible-cpus~
+
 * additional features
 
 - [X] (Should I make 'getpid' ready?)
