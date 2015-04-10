@@ -60,7 +60,8 @@ All functions without numa-avaliable are undefined.")))
     ((:file "package")
      (:file "wrapper-syntax")
      (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-ext-error-wrapping")
-     (:file "binding"))))
+     (:file "binding" :depends-on "wrapping") ; must be later then wrapping for looking up the expected funtions.
+     )))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.ext-error.test))))
 
 (asdf:defsystem :cl-libnuma.ext-error.test

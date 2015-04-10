@@ -11,20 +11,20 @@
   (setf *numa-warn-called* (or where t)))
 
 (defun install-test-callback ()
-  (setf *numa-error* #'numa-error-test-callback
-	*numa-warn* #'numa-warn-test-callback))
+  (setf *numa-error-callback* #'numa-error-test-callback
+	*numa-warn-callback* #'numa-warn-test-callback))
 
 (defun uninstall-test-callback ()
-  (setf *numa-error* nil
-	*numa-warn* nil))
+  (setf *numa-error-callback* nil
+	*numa-warn-callback* nil))
 
 (defmacro with-test-callback (() &body body)
-  `(let ((*numa-error-called* nil)
-	 (*numa-warn-called* nil))
-     (install-test-callback)
-     (unwind-protect
-	  ,@body
-       (uninstall-test-callback))))
+  `(unwind-protect
+	(let ((*numa-error-called* nil)
+	      (*numa-warn-called* nil))
+	  (install-test-callback)
+	  ,@body)
+     (uninstall-test-callback)))
 
 (defun test-callback-available? ()
   (with-test-callback ()

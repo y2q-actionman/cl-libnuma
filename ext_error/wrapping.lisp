@@ -17,7 +17,7 @@
 
 (define NUMA_WARN_BUFFER_SIZE 256)
 
-(define-overriding-callback* (:c-overriden-function-name "numa_warn"
+(define-overriding-callback* ("numa_warn"
 			      :c-trampoline-variable-name "numa_warn_trampoline")
     :void
   ((num :int) (fmt :string) &rest)

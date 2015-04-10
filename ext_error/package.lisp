@@ -7,8 +7,8 @@
 (defpackage :cl-libnuma.ext-error.wrapper
   (:use)
   (:export
-   #:*numa-error*
-   #:*numa-warn*))
+   #:*numa-error-callback*
+   #:*numa-warn-callback*))
 
 (defpackage :cl-libnuma.ext-error
   (:use :cl :cffi :cl-libnuma
@@ -16,5 +16,5 @@
   (:export
    #:numa-error
    #:numa-warn
-   #:*numa-error*
-   #:*numa-warn*))
+   #:*numa-error-callback*
+   #:*numa-warn-callback*))

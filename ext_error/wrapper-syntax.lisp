@@ -4,32 +4,21 @@
 (defun parse-overriding-callback-name (nameopts)
   "Returns: (values <c-overriden-function-name> <lisp-callback-variable-name>
         <lisp-trampoline-function-name> <c-trampoline-variable-name>)"
-  (flet ((generate-results (&key c-overriden-function-name
-				 lisp-callback-variable-name
-				 c-trampoline-variable-name
-				 lisp-trampoline-function-name)
-	   (when (and (null c-overriden-function-name)
-		      (null lisp-callback-variable-name))
-	     (error "one of c-overriden-function-name or lisp-callback-variable-name must be supplied"))
-	   (unless c-overriden-function-name
-	     (setf c-overriden-function-name
-		   (cffi::foreign-name lisp-callback-variable-name t)))
-	   (unless lisp-callback-variable-name
-	     (setf lisp-callback-variable-name
-		   (cffi::lisp-name c-overriden-function-name t)))
-	   (unless c-trampoline-variable-name
-	     (setf c-trampoline-variable-name
-		   (concatenate 'string c-overriden-function-name "_trampoline")))
-	   (unless lisp-trampoline-function-name
-	     (setf lisp-trampoline-function-name
-		   (cffi::lisp-name c-trampoline-variable-name nil)))
+  (flet ((generate-results
+	     (c-overriden-function-name
+	      &key
+	      (lisp-callback-variable-name
+	       (cffi::lisp-name (concatenate 'string c-overriden-function-name "_callback") t))
+	      (c-trampoline-variable-name
+	       (concatenate 'string c-overriden-function-name "_trampoline"))
+	      (lisp-trampoline-function-name
+	       (cffi::lisp-name c-trampoline-variable-name nil)))
 	   (values c-overriden-function-name
 		   lisp-callback-variable-name
 		   c-trampoline-variable-name
 		   lisp-trampoline-function-name)))
     (etypecase nameopts
-      (string (generate-results :c-overriden-function-name nameopts))
-      (symbol (generate-results :lisp-callback-variable-name nameopts))
+      (string (generate-results nameopts))
       (list (apply #'generate-results nameopts)))))
 
 (defun generate-overriding-callback (out nameopts rettype args c-lines)

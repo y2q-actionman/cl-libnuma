@@ -12,21 +12,7 @@
        (stringp c-overriden-function-name)
        (equal c-overriden-function-name "hoge_fuga_piyo")
        (symbolp lisp-callback-variable-name)
-       (equal lisp-callback-variable-name '*HOGE-FUGA-PIYO*)
-       (stringp c-trampoline-variable-name)
-       (equal c-trampoline-variable-name "hoge_fuga_piyo_trampoline")
-       (symbolp lisp-trampoline-function-name)
-       (equal lisp-trampoline-function-name 'HOGE-FUGA-PIYO-TRAMPOLINE)))
-    (multiple-value-bind (c-overriden-function-name
-			  lisp-callback-variable-name
-			  c-trampoline-variable-name
-			  lisp-trampoline-function-name)
-	(cl-libnuma.wrapper-syntax::parse-overriding-callback-name '*hoge-fuga-piyo*)
-      (assert-progn
-       (stringp c-overriden-function-name)
-       (equal c-overriden-function-name "hoge_fuga_piyo")
-       (symbolp lisp-callback-variable-name)
-       (equal lisp-callback-variable-name '*HOGE-FUGA-PIYO*)
+       (equal lisp-callback-variable-name '*HOGE-FUGA-PIYO-CALLBACK*)
        (stringp c-trampoline-variable-name)
        (equal c-trampoline-variable-name "hoge_fuga_piyo_trampoline")
        (symbolp lisp-trampoline-function-name)
@@ -36,7 +22,7 @@
 			  c-trampoline-variable-name
 			  lisp-trampoline-function-name)
 	(cl-libnuma.wrapper-syntax::parse-overriding-callback-name
-	 `(:c-overriden-function-name "test-c-o-f-n"
+	 `("test-c-o-f-n"
 	   :lisp-callback-variable-name test-l-c-v-n
 	   :c-trampoline-variable-name "test-c-t-v-n"
 	   :lisp-trampoline-function-name test-t-f-n))
