@@ -6,6 +6,9 @@
 
 - [X] checks libc-semantic return values. 
 
+- [ ] License.
+  LLGPL?
+
 
 * enhancement
 
@@ -76,7 +79,9 @@
   manpage says this returns a CPU mask, but source says it's a node mask!
 
 - numa_node_to_cpus()
-  A trivial issue: manpage doesn't highlight numa_allocate_cpumask()
+  - numa-node-to-cpus with -1 causes segfault.
+  - A trivial issue: manpage doesn't highlight numa_allocate_cpumask()
+  - If the bitmask is not long enough, libnuma calls numa_error(). This not returns ERANGE said in manpage.
 
 - numa_pagesize()
   source says 'not documented', and don't appear at the top of

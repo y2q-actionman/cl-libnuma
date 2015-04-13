@@ -1,6 +1,7 @@
 (in-package :cl-libnuma)
 
 (defconstant +cl-libnuma-target-api-version+ 2
+  ;; from libnuma-2.0.2
   "The API version of libnuma when cl-libnuma is coded. (2015-03-31)")
 
 ;;; Types
@@ -138,6 +139,7 @@
     :int)
 
 (defcfun (numa-num-possible-cpus* "numa_num_possible_cpus")
+    ;; from libnuma-2.0.8-rc5
     :int)
 
 (defun numa-num-possible-cpus ()
@@ -194,6 +196,7 @@
   (string :string))
 
 (defcfun (numa-parse-nodestring-all* "numa_parse_nodestring_all")
+    ;; from libnuma-2.0.8-rc5
     (libnuma-bitmask-type :specifying :node)
   (string :string))
 
@@ -205,9 +208,11 @@
 
 (defcfun numa-parse-cpustring
     (libnuma-bitmask-type :specifying :cpu)
+    ;; changed at libnuma-2.0.8-rc5?
   (string :string))
 
 (defcfun (numa-parse-cpustring-all* "numa_parse_cpustring_all")
+    ;; from libnuma-2.0.8-rc5
     (libnuma-bitmask-type :specifying :cpu)
   (string :string))
 
@@ -311,6 +316,7 @@
 
 (defcfun numa-realloc
     malloc-pointer
+  ;; from libnuma-2.0.7-rc1
   (old-addr malloc-pointer)
   (old-size size_t)
   (new-size size_t))
@@ -338,6 +344,7 @@
   (nodemask (libnuma-bitmask-type :specifying :node)))
 
 (defcfun (numa-run-on-node-mask-all* "numa_run_on_node_mask_all")
+    ;; from libnuma-2.0.9-rc3
     libc-return-boolean
   (nodemask (libnuma-bitmask-type :specifying :node)))
 
@@ -415,6 +422,7 @@
 
 (defcfun numa-node-of-cpu
     libc-return-int
+  ;; from libnuma-2.0.3-rc3
   (cpu :int))
 
 
@@ -512,6 +520,7 @@
 
 (defcfun (copy-bitmask-to-bitmask* "copy_bitmask_to_bitmask")
     :void
+    ;; from libnuma-2.0.2
   (bmpfrom (:pointer (:struct struct-bitmask)))
   (bmpto (:pointer (:struct struct-bitmask))))
 
@@ -520,6 +529,7 @@
 
 (defcfun (numa-bitmask-weight* "numa_bitmask_weight")
     :unsigned-int
+  ;; (fixed at libnuma-2.0.9-rc1)
   (bmp (:pointer (:struct struct-bitmask))))
 
 (defun numa-bitmask-weight (lisp-bitmask)
@@ -576,6 +586,7 @@
     (:boolean :int))
 
 (defcvar *numa-exit-on-warn*
+    ;; from libnuma-2.0.2
     (:boolean :int))
 
 
