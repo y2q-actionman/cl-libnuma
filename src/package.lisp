@@ -23,6 +23,7 @@
 	:cl-libnuma.wrapper)
   (:export
    #:+cl-libnuma-target-api-version+
+   #:not-found-warning
 
    ;; library name
    #:libnuma

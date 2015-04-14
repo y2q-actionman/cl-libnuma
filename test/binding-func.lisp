@@ -1,5 +1,18 @@
 (in-package :cl-libnuma.test)
 
+(defmacro if-numa-function-exists (test-form then-form &optional else-form)
+  (let ((condition-var (gensym "condition"))
+	(result-var (gensym "result")))
+    `(handler-case (progn ,test-form)
+       (not-found-warning (,condition-var)
+	 (declare (ignorable ,condition-var))
+	 ,(if else-form
+	      else-form
+	      `(format *error-output* "~&~A~%" ,condition-var)))
+       (:no-error (&rest ,result-var)
+	 (declare (ignore ,result-var))
+	 ,then-form))))
+     
 (defun test-numa-parser ()
   ;; numa-parse-bitmap
   ;; This test fully depends on '/sys' filesystem.
@@ -39,11 +52,11 @@
 		(typep (funcall func "+0,1") 'numa-bitmask)
 		(typep (funcall func "+0-1") 'numa-bitmask))))))
     (test-parse-string #'numa-parse-nodestring :node)
-    (when (ignore-errors (numa-parse-nodestring-all ""))
-      (test-parse-string #'numa-parse-nodestring-all :node))
+    (if-numa-function-exists (numa-parse-nodestring-all "")
+			     (test-parse-string #'numa-parse-nodestring-all :node))
     (test-parse-string #'numa-parse-cpustring :cpu)
-    (when (ignore-errors (numa-parse-cpustring-all ""))
-      (test-parse-string #'numa-parse-cpustring-all :cpu)))
+    (if-numa-function-exists (numa-parse-cpustring-all "")
+			     (test-parse-string #'numa-parse-cpustring-all :cpu)))
   t)
 
 (defun test-numa-node-size ()
@@ -215,10 +228,11 @@
 	      do (setf (cffi:mem-aref mem1 :unsigned-char i) n)
 	      do (incf sum-at-write n))
 	   ;; realloc
-	   (setf mem2 (numa-realloc mem1 size1 size2))
-	   (unless mem2
-	     (warn "numa-realloc failed")
-	     (return))
+	   (if-numa-function-exists (setf mem2 (numa-realloc mem1 size1 size2))
+				    (unless mem2
+				      (warn "numa-realloc failed")
+				      (return))
+				    (return)) ; escapes from this block
 	   (setf mem1 nil)
 	   ;; checks whether values are preserved.
 	   (loop for i from 0 below size1
@@ -262,14 +276,8 @@
 			   (assert (not (,funcname *numa-no-nodes-bitmask*))) ; no nodes -- error
 			   (assert (,funcname *numa-all-nodes-bitmask*))))) ; all nodes
 	     (test-run-on-node-mask numa-run-on-node-mask)
-	     (multiple-value-bind (ret condition)
-		 (ignore-errors
-		   (numa-run-on-node-mask-all *numa-all-nodes-bitmask*))
-	       (cond ((and (not ret) condition)
-		      ;; This libnuma does not supports numa_run_on_node_mask_all()
-		      nil)
-		     (t
-		      (test-run-on-node-mask numa-run-on-node-mask-all))))))
+	     (if-numa-function-exists (numa-run-on-node-mask-all *numa-all-nodes-bitmask*)
+				      (test-run-on-node-mask numa-run-on-node-mask-all))))
       (numa-run-on-node-mask orig-mask)))
   t)
 
@@ -360,8 +368,8 @@
 		      	(assert (= (1- filled-bits)
 		      		   (,(nb 'weight) ,mask1))))
 		      (assert (not (,(nb 'equal) ,mask1 ,mask2)))
-		      (,(copier) ,mask1 ,mask2)
-		      (assert (,(nb 'equal) ,mask1 ,mask2)))))))
+		      (if-numa-function-exists (,(copier) ,mask1 ,mask2)
+		        (assert (,(nb 'equal) ,mask1 ,mask2))))))))
     (flet ((test-raw-mask (alloc-func)	; 'struct bitmask*' of libnuma
 	     (cl-libnuma::with-temporal-struct-bitmask-pointer (mask1 (funcall alloc-func))
 	       (cl-libnuma::with-temporal-struct-bitmask-pointer (mask2 (funcall alloc-func))

@@ -105,7 +105,6 @@
 
 
 ;;; Utils
-
 (defmacro with-temporal-struct-bitmask-pointer ((var form) &body body)
   `(let ((,var ,form))
      (unwind-protect
@@ -114,20 +113,44 @@
 	      (progn ,@body))
        (numa-bitmask-free* ,var))))
 
-(defmacro with-calling-maybe-not-found-function
-    (form (&optional (condition (gensym) condition-supplied-p))
-     &body body)
-  `(handler-case ,form
-     ;; This code assumes a simple-error is reported when the function
-     ;; is not found.
-     (simple-error (,condition)
-       ,(if (not condition-supplied-p)
-	    `(declare (ignorable ,condition)))
-       ,@body)))
+(define-condition not-found-warning (simple-warning)
+  ())
+
+(defmacro defcfun-maybe-not-found* (name-and-options return-type 
+				    version-string args
+				    handler-function)
+  (assert (not (member '&rest args)) () "not implemented..")
+  (multiple-value-bind (lisp-name foreign-name options)
+      (cffi::parse-name-and-options name-and-options)
+    (let ((wrapper-name (gensym (symbol-name lisp-name)))
+	  (arg-syms (mapcar #'first args))
+	  (cond-gsym (gensym "condition")))
+      `(progn
+	 (defcfun (,wrapper-name ,foreign-name ,@options)
+	     ,return-type
+	   ,@args)
+	 (defun ,lisp-name (,@arg-syms)
+	   (handler-bind
+	       ;; FIXME: I don't what a kind of error is reported when
+	       ;; a function is not found.
+	       ((error #'(lambda (,cond-gsym)
+			   (declare (ignorable ,cond-gsym))
+			   ,(if handler-function
+				`(return-from ,lisp-name
+				   (,handler-function ,cond-gsym))
+				`(warn 'not-found-warning
+				       :format-control "~A, added at ~A, was not found."
+				       :format-arguments '(,foreign-name ,version-string))))))
+	     (,wrapper-name ,@arg-syms)))))))
+
+(defmacro defcfun-maybe-not-found (name-and-options return-type version-string
+				   &body args)
+  `(defcfun-maybe-not-found* ,name-and-options ,return-type
+       ,version-string (,@args)
+     nil))
 
 
 ;;; Funtions
-
 (defcfun numa-available
     libc-return-boolean)
 
@@ -138,13 +161,12 @@
 (defcfun numa-num-possible-nodes
     :int)
 
-(defcfun (numa-num-possible-cpus* "numa_num_possible_cpus")
-    ;; from libnuma-2.0.8-rc5
-    :int)
-
-(defun numa-num-possible-cpus ()
-  (with-calling-maybe-not-found-function (numa-num-possible-cpus*)
-      ()
+(defcfun-maybe-not-found* numa-num-possible-cpus
+    :int
+    "libnuma-2.0.8-rc5"
+    ()
+  (lambda (_)
+    (declare (ignore _))
     ;; A workaround for numa_num_possible_cpus(), which is not
     ;; exported until libnuma-2.0.8-rc4.
     (with-temporal-struct-bitmask-pointer (bmp (numa-allocate-cpumask*))
@@ -195,32 +217,20 @@
     (libnuma-bitmask-type :specifying :node)
   (string :string))
 
-(defcfun (numa-parse-nodestring-all* "numa_parse_nodestring_all")
-    ;; from libnuma-2.0.8-rc5
+(defcfun-maybe-not-found numa-parse-nodestring-all
     (libnuma-bitmask-type :specifying :node)
+    "libnuma-2.0.8-rc5"
   (string :string))
-
-(defun numa-parse-nodestring-all (string)
-  (with-calling-maybe-not-found-function (numa-parse-nodestring-all* string)
-      (condition)
-    (warn "numa_parse_nodestring_all() was added at libnuma-2.0.8-rc5.")
-    (error condition)))
 
 (defcfun numa-parse-cpustring
     (libnuma-bitmask-type :specifying :cpu)
     ;; changed at libnuma-2.0.8-rc5?
   (string :string))
 
-(defcfun (numa-parse-cpustring-all* "numa_parse_cpustring_all")
-    ;; from libnuma-2.0.8-rc5
+(defcfun-maybe-not-found numa-parse-cpustring-all
     (libnuma-bitmask-type :specifying :cpu)
+    "libnuma-2.0.8-rc5"
   (string :string))
-
-(defun numa-parse-cpustring-all (string)
-  (with-calling-maybe-not-found-function (numa-parse-cpustring-all* string)
-      (condition)
-    (warn "numa_parse_cpustring_all() was added at libnuma-2.0.8-rc5.")
-    (error condition)))
 
 
 (defcfun (numa-node-size* "numa_node_size")
@@ -314,9 +324,9 @@
     malloc-pointer
   (size size_t))
 
-(defcfun numa-realloc
+(defcfun-maybe-not-found numa-realloc
     malloc-pointer
-  ;; from libnuma-2.0.7-rc1
+    "libnuma-2.0.7-rc1"
   (old-addr malloc-pointer)
   (old-size size_t)
   (new-size size_t))
@@ -343,16 +353,10 @@
     libc-return-boolean
   (nodemask (libnuma-bitmask-type :specifying :node)))
 
-(defcfun (numa-run-on-node-mask-all* "numa_run_on_node_mask_all")
-    ;; from libnuma-2.0.9-rc3
+(defcfun-maybe-not-found numa-run-on-node-mask-all
     libc-return-boolean
+    "libnuma-2.0.9-rc3"
   (nodemask (libnuma-bitmask-type :specifying :node)))
-
-(defun numa-run-on-node-mask-all (nodemask)
-  (with-calling-maybe-not-found-function (numa-run-on-node-mask-all* nodemask)
-      (condition)
-    (warn "numa_run_on_node_mask_all() was added at libnuma-2.0.9-rc3.")
-    (error condition)))
 
 (defcfun numa-get-run-node-mask
     (libnuma-bitmask-type :specifying :node))
@@ -518,9 +522,9 @@
   (nodemask (:pointer (:struct nodemask_t)))
   (bmp (:pointer (:struct struct-bitmask))))
 
-(defcfun (copy-bitmask-to-bitmask* "copy_bitmask_to_bitmask")
+(defcfun-maybe-not-found (copy-bitmask-to-bitmask* "copy_bitmask_to_bitmask")
     :void
-    ;; from libnuma-2.0.2
+    "libnuma-2.0.2"
   (bmpfrom (:pointer (:struct struct-bitmask)))
   (bmpto (:pointer (:struct struct-bitmask))))
 
