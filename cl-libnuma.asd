@@ -7,8 +7,8 @@
 
 (asdf:defsystem :cl-libnuma
   ;; :description ""
-  ;; :license "GNU Lesser GPL v 2.1"  ; == same as libnuma ???
-  ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
+  :license "LLGPL"
+  :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cffi)
   :components
   ((:module "src"
@@ -33,8 +33,8 @@ All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.test
   ;; :description ""
-  ;; :license ""
-  ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
+  :license "LLGPL"
+  :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cl-libnuma)
   :components
   ((:module "test"
@@ -50,8 +50,8 @@ All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.ext-error
   ;; :description ""
-  ;; :license ""
-  ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
+  :license "LLGPL"
+  :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cl-libnuma)
   :components
   ((:module "ext_error"
@@ -66,8 +66,8 @@ All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.ext-error.test
   ;; :description ""
-  ;; :license ""
-  ;; :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
+  :license "LLGPL"
+  :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cl-libnuma.ext-error :cl-libnuma.test)
   :components
   ((:module "ext_error_test"
