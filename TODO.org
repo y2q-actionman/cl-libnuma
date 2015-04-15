@@ -53,14 +53,21 @@
   or, check interoperability with excl.osi, etc.
   -- Dropped. We can use 'pid=0' as a pid of the current process.
 
-- [ ] Import errno?
+- [X] (Import errno?)
   numa-move-pages returns an array filled with errno.
+  - Dropped. I think this is overkilling.
 
 - [X] checks libnuma version?
   for numa-num-possible-cpus
 
-- [ ] Fix for libnuma: numa-node-to-cpus with -1 causes segfault.
+- [X] (Fix for libnuma: numa-node-to-cpus with -1 causes segfault.)
+  Dropped. I think this is not my job.
 
+
+* known bugs
+- ~cl-libnuma.ext-error~ must be loaded before ~cl-libnuma~ in order to work with callbacks collectly.
+- ~numa-warn*~ and ~numa-error*~ may be bound to libnuma's one or the one of cl-libnuma.ext-error.
+  There is no way to bind a specific one portablly.
 
 * libnuma manpage bugs
 

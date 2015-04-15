@@ -1,48 +1,37 @@
 (in-package :cl-libnuma.ext-error.test)
 
-(defparameter *numa-error-called* nil)
-(defparameter *numa-warn-called* nil)
-
-(defun numa-error-test-callback (where)
-  (setf *numa-error-called* (or where t)))
-
-(defun numa-warn-test-callback (number where)
-  (declare (ignore number))
-  (setf *numa-warn-called* (or where t)))
-
-(defmacro with-test-callback (() &body body)
-  (let ((orig-error-callback-sym (gensym))
-	(orig-warn-callback-sym (gensym)))
-    `(let ((*numa-error-called* nil)
-	   (*numa-warn-called* nil)
-	   (,orig-error-callback-sym *numa-error-callback*)
-	   (,orig-warn-callback-sym *numa-warn-callback*))
-       (setf *numa-error-callback* #'numa-error-test-callback
-	     *numa-warn-callback* #'numa-warn-test-callback)
-       (unwind-protect
-	    (progn ,@body)
-	 (setf *numa-error-callback* ,orig-error-callback-sym
-	       *numa-warn-callback* ,orig-warn-callback-sym)))))
-
-(defun test-callback-available? ()
-  (with-test-callback ()
-    (numa-error "test")
-    (assert *numa-error-called*)
-    (numa-warn 0 "test")
-    (assert *numa-warn-called*))
-  t)
+(defmacro with-ext-error-callback (&body body)
+  `(progn
+     (install-condition-callback)
+     (unwind-protect (progn ,@body)
+       (uninstall-condition-callback))))
 
 (defun test-libnuma-api-error ()
   ;; Checks numa_error() is properly called from libnuma.
   ;; I collect these examples from the source.
+  
+  (with-ext-error-callback
+    (assert-progn
+     ;; - numa_bitmask_alloc()
+     ;; Calling with '0' or '-1' will invoke numa_error(), but exit(3)
+     ;; will be called after. I can't do it here.
 
-  ;; (wrapped api)
-  ;; numa_bitmask_alloc() @ -1
-  ;; numa_node_to_cpus() @ small mask
+     ;; - numa_get_mems_allowed()
+     ;; If this calls numa_error(), it is very fatal, I think.
+
+     ;; - numa_node_to_cpus() :: called with a small mask.
+     (let ((node 0))
+       (if (> (length (numa-node-to-cpus node)) 1)
+	   (cl-libnuma::with-temporal-struct-bitmask-pointer
+	       (bmp (cl-libnuma::numa-bitmask-alloc* 1))
+	     (assume-condition (numa-error-condition)
+	       (cl-libnuma::numa-node-to-cpus* node bmp)))
+	   t))				; no way to check it.
+  ;; 
+  ;; numa_run_on_node_mask() @ sched_setaffinity failure
+  ;; numa_run_on_node_mask_all() @ sched_setaffinity failure
 
   ;; (internal) setpol, getpol, dombind
-
-  ;; numa_run_on_node_mask() @ sched_setaffinity failure
 
   ;; (setpol)
   ;; numa_set_interleave_mask()
@@ -63,18 +52,21 @@
   ;; numa_alloc_interleaved_subset()
   ;; numa_alloc_onnode()
   ;; numa_alloc_local()
+    ))
   t)
 
 (defun test-libnuma-api-warn ()
-  ;; Checks numa_error() is properly called from libnuma.
+  ;; Checks numa_warn() is properly called from libnuma.
   ;; I collect these examples from the source.
-
+  
   ;; numa_parse_nodestring()
   ;; numa_parse_cpustring()
+
+  ;; (If not sysfs..)
+  ;; numa_node_size64()
   t)
 
 (defun test-binding ()
-  (and (test-callback-available?)
-       (test-libnuma-api-error)
+  (and (test-libnuma-api-error)
        (test-libnuma-api-warn)
        t))

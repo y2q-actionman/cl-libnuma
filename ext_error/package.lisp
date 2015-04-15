@@ -11,10 +11,14 @@
    #:*numa-warn-callback*))
 
 (defpackage :cl-libnuma.ext-error
-  (:use :cl :cffi :cl-libnuma
+  (:use :cl :cffi
 	:cl-libnuma.ext-error.wrapper)
   (:export
-   #:numa-error
-   #:numa-warn
    #:*numa-error-callback*
-   #:*numa-warn-callback*))
+   #:*numa-warn-callback*
+
+   #:numa-error-condition
+   #:numa-warn-condition
+   #:install-condition-callback
+   #:uninstall-condition-callback
+   ))

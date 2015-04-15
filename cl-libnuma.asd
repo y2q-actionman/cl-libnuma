@@ -52,7 +52,6 @@ All functions without numa-avaliable are undefined.")))
   ;; :description ""
   :license "LLGPL"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
-  :depends-on (:cl-libnuma)
   :components
   ((:module "ext_error"
     :serial t
@@ -60,9 +59,11 @@ All functions without numa-avaliable are undefined.")))
     ((:file "package")
      (:file "wrapper-syntax")
      (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-ext-error-wrapping")
-     (:file "binding" :depends-on ("wrapping")) ; must be later then wrapping for looking up the expected funtions.
+     (:file "binding" :depends-on ("wrapping"))
+     (:file "condition")
      )))
-  :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.ext-error.test))))
+  :in-order-to ((asdf:load-op (asdf:load-op #:cl-libnuma)) ; This must be loaded after!
+		(asdf:test-op (asdf:test-op #:cl-libnuma.ext-error.test))))
 
 (asdf:defsystem :cl-libnuma.ext-error.test
   ;; :description ""

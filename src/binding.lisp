@@ -586,12 +586,22 @@
   (tonodes (libnuma-bitmask-type :specifying :node)))
 
 
+(defcfun (numa-error* "numa_error")	; This is linked to the one of libnuma.
+    :void
+  (where :string))
+
 (defcvar *numa-exit-on-error*
     (:boolean :int))
 
 (defcvar *numa-exit-on-warn*
     ;; from libnuma-2.0.2
     (:boolean :int))
+
+(defcfun (numa-warn* "numa_warn")	; This is linked to the one of libnuma.
+    :void
+  (number :int)
+  (where :string)
+  &rest)
 
 
 (defcfun numa-pagesize
