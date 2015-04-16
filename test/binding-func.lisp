@@ -12,7 +12,7 @@
        (:no-error (&rest ,result-var)
 	 (declare (ignore ,result-var))
 	 ,then-form))))
-     
+
 (defun test-numa-parser ()
   ;; numa-parse-bitmap
   ;; This test fully depends on '/sys' filesystem.
@@ -28,29 +28,28 @@
 			    (:node (numa-num-configured-nodes))
 			    (:cpu (numa-num-configured-cpus)))))
 	     (assert-progn
-	      (if (eq type :node)
-		  (numa-bitmask-equal (funcall func "")
-				      *numa-no-nodes-bitmask*)
-		  t)
-	      (numa-bitmask-equal (funcall func "all")
-				  (ecase type
-				    (:node *numa-all-nodes-bitmask*)
-				    (:cpu *numa-all-cpus-bitmask*)))
-	      (not (funcall func "??")))
+	       (assert-when (eq type :node)
+		 (numa-bitmask-equal (funcall func "")
+				     *numa-no-nodes-bitmask*))
+	       (numa-bitmask-equal (funcall func "all")
+				   (ecase type
+				     (:node *numa-all-nodes-bitmask*)
+				     (:cpu *numa-all-cpus-bitmask*)))
+	       (not (funcall func "??")))
 	     ;; using 0
 	     (when (<= 0 num-max)
 	       (assert-progn
-		(typep (funcall func "0") 'numa-bitmask)
-		(typep (funcall func "!0") 'numa-bitmask)
-		(typep (funcall func "+0") 'numa-bitmask)
-		(typep (funcall func "0-0") 'numa-bitmask)))
+		 (typep (funcall func "0") 'numa-bitmask)
+		 (typep (funcall func "!0") 'numa-bitmask)
+		 (typep (funcall func "+0") 'numa-bitmask)
+		 (typep (funcall func "0-0") 'numa-bitmask)))
 	     ;; using 0, 1
 	     (when (<= 1 num-max)
 	       (assert-progn
-		(typep (funcall func "0,1") 'numa-bitmask)
-		(typep (funcall func "0-1") 'numa-bitmask)
-		(typep (funcall func "+0,1") 'numa-bitmask)
-		(typep (funcall func "+0-1") 'numa-bitmask))))))
+		 (typep (funcall func "0,1") 'numa-bitmask)
+		 (typep (funcall func "0-1") 'numa-bitmask)
+		 (typep (funcall func "+0,1") 'numa-bitmask)
+		 (typep (funcall func "+0-1") 'numa-bitmask))))))
     (test-parse-string #'numa-parse-nodestring :node)
     (if-numa-function-exists (numa-parse-nodestring-all "")
 			     (test-parse-string #'numa-parse-nodestring-all :node))
@@ -64,18 +63,18 @@
      do (multiple-value-bind (size free) (numa-node-size node)
 	  (multiple-value-bind (size64 free64) (numa-node-size64 node)
 	    (assert-progn
-	     (integerp size) (integerp free)
-	     (integerp size64) (integerp free64))
-	    (when (<= size64 most-positive-fixnum)
-	      (assert (= size size64)))
-	    (when (<= free64 most-positive-fixnum)
-	      (assert (= free free64))))))
+	      (integerp size) (integerp free)
+	      (integerp size64) (integerp free64)
+	      (assert-when (<= size64 most-positive-fixnum)
+		(= size size64))
+	      (assert-when (<= free64 most-positive-fixnum)
+		(= free free64))))))
   ;; error case
   (assert-progn
-   (not (numa-node-size -1))
-   (not (numa-node-size64 -1))
-   (not (numa-node-size (numa-num-configured-nodes)))
-   (not (numa-node-size64 (numa-num-configured-nodes))))
+    (not (numa-node-size -1))
+    (not (numa-node-size64 -1))
+    (not (numa-node-size (numa-num-configured-nodes)))
+    (not (numa-node-size64 (numa-num-configured-nodes))))
   t)
 
 (defun test-numa-preferred ()
@@ -128,10 +127,10 @@
     (unwind-protect
 	 ;; TODO: On error cases, checks whether numa_error() was called or not.
 	 (progn
-	  (when (find 1 (numa-get-interleave-mask))
-	    (numa-interleave-memory memory size (numa-get-interleave-mask)))
-	  (numa-interleave-memory memory size *numa-all-nodes-bitmask*)
-	  (not (numa-interleave-memory memory size *numa-no-nodes-bitmask*)))
+	   (when (find 1 (numa-get-interleave-mask))
+	     (numa-interleave-memory memory size (numa-get-interleave-mask)))
+	   (numa-interleave-memory memory size *numa-all-nodes-bitmask*)
+	   (not (numa-interleave-memory memory size *numa-no-nodes-bitmask*)))
       (numa-free memory size)))
   t)
 
@@ -369,7 +368,7 @@
 		      		   (,(nb 'weight) ,mask1))))
 		      (assert (not (,(nb 'equal) ,mask1 ,mask2)))
 		      (if-numa-function-exists (,(copier) ,mask1 ,mask2)
-		        (assert (,(nb 'equal) ,mask1 ,mask2))))))))
+					       (assert (,(nb 'equal) ,mask1 ,mask2))))))))
     (flet ((test-raw-mask (alloc-func)	; 'struct bitmask*' of libnuma
 	     (cl-libnuma::with-temporal-struct-bitmask-pointer (mask1 (funcall alloc-func))
 	       (cl-libnuma::with-temporal-struct-bitmask-pointer (mask2 (funcall alloc-func))
@@ -453,61 +452,61 @@
 
 (defun test-binding-func ()
   (assert-progn
-   (typep (numa-available) 'boolean)
+    (typep (numa-available) 'boolean)
 
-   (integerp (numa-max-possible-node))
-   (integerp (numa-num-possible-nodes))
-   (integerp (numa-num-possible-cpus))
+    (integerp (numa-max-possible-node))
+    (integerp (numa-num-possible-nodes))
+    (integerp (numa-num-possible-cpus))
 
-   (integerp (numa-max-node))
-   (integerp (numa-num-configured-nodes))
-   (typep (numa-get-mems-allowed) 'numa-bitmask)
+    (integerp (numa-max-node))
+    (integerp (numa-num-configured-nodes))
+    (typep (numa-get-mems-allowed) 'numa-bitmask)
 
-   (integerp (numa-num-configured-cpus))
-   (typep *numa-all-nodes-bitmask* 'numa-bitmask)
-   (typep *numa-no-nodes-bitmask* 'numa-bitmask)
-   (typep *numa-all-cpus-bitmask* 'numa-bitmask)
+    (integerp (numa-num-configured-cpus))
+    (typep *numa-all-nodes-bitmask* 'numa-bitmask)
+    (typep *numa-no-nodes-bitmask* 'numa-bitmask)
+    (typep *numa-all-cpus-bitmask* 'numa-bitmask)
 
-   (integerp (numa-num-task-cpus))
-   (integerp (numa-num-task-nodes))
+    (integerp (numa-num-task-cpus))
+    (integerp (numa-num-task-nodes))
 
-   (test-numa-parser)
+    (test-numa-parser)
 
-   (test-numa-node-size)
+    (test-numa-node-size)
 
-   (test-numa-preferred)
-   (integerp (numa-get-interleave-node))
-   (test-numa-interleave-mask)
-   (test-numa-interleave-memory)
-   (test-numa-bind)
-   ;; numa-set-localalloc -- in test-numa-preferred
-   (test-numa-membind)
+    (test-numa-preferred)
+    (integerp (numa-get-interleave-node))
+    (test-numa-interleave-mask)
+    (test-numa-interleave-memory)
+    (test-numa-bind)
+    ;; numa-set-localalloc -- in test-numa-preferred
+    (test-numa-membind)
 
-   (test-numa-alloc)
-   
-   (test-numa-run-on)
+    (test-numa-alloc)
+    
+    (test-numa-run-on)
 
-   (test-numa-memory-location)
-   (always-success
-     (numa-set-bind-policy nil)
-     (numa-set-bind-policy t))		; default is 'strict'
-   (always-success
-     (numa-set-strict t)
-     (numa-set-strict nil))		; default is 'preferred'
+    (test-numa-memory-location)
+    (always-success
+      (numa-set-bind-policy nil)
+      (numa-set-bind-policy t))		; default is 'strict'
+    (always-success
+      (numa-set-strict t)
+      (numa-set-strict nil))		; default is 'preferred'
 
-   (test-numa-distance)
+    (test-numa-distance)
 
-   (test-numa-affinity)
-   (test-numa-node-to/of-cpu)
+    (test-numa-affinity)
+    (test-numa-node-to/of-cpu)
 
-   (test-numa-bitmask)
+    (test-numa-bitmask)
 
-   (test-numa-move-pages)
+    (test-numa-move-pages)
 
-   (test-numa-migrate-pages)
+    (test-numa-migrate-pages)
 
-   (typep *numa-exit-on-error* 'boolean)
-   (typep *numa-exit-on-warn* 'boolean)
+    (typep *numa-exit-on-error* 'boolean)
+    (typep *numa-exit-on-warn* 'boolean)
 
-   (integerp (numa-pagesize))
-   ))
+    (integerp (numa-pagesize))
+    ))

@@ -66,8 +66,15 @@
 
 * known bugs
 - ~cl-libnuma.ext-error~ must be loaded before ~cl-libnuma~ in order to work with callbacks collectly.
+
 - ~numa-warn*~ and ~numa-error*~ may be bound to libnuma's one or the one of cl-libnuma.ext-error.
   There is no way to bind a specific one portablly.
+  
+  -- Can this be fixed by specifying ~:library~ at ~defcfun~?
+  -- dlopen() -> dlsym() -> foreign-funcall-pointer?
+
+- ~numa-alloc~ variations returns an alive pointer even if it calls ~numa_error()~.
+  We must take care of this situation when handling ~numa-warn-condition~.
 
 * libnuma manpage bugs
 
@@ -97,6 +104,12 @@
   If arguments are out-of-range, this silently fails and returns an
   undefined value. (which is read from out of the 'distance_table' of
   libnuma.)
+
+- numa_set_preferred()
+  with calling 'node':
+  - ~0 <= node < (numa-num-configured-nodes)~ :: accepted
+  - ~(numa-num-configured-nodes) <= node < (numa-num-possible-nodes)~ :: fails
+  - ~(numa-num-possible-nodes) <= node~ :: silently saying 'local allocation'
 
 - numa_set_membind()
   If an error occured, numa_error() is called.
