@@ -59,11 +59,26 @@ All functions without numa-avaliable are undefined.")))
     ((:file "package")
      (:file "wrapper-syntax")
      (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-ext-error-wrapping")
-     (:file "binding" :depends-on ("wrapping"))
      (:file "condition")
      )))
-  :in-order-to ((asdf:load-op (asdf:load-op #:cl-libnuma)) ; This must be loaded after!
+  :in-order-to ((asdf:load-op (asdf:load-op #:cl-libnuma) ; This must be loaded after!
+			      (asdf:load-op #:cl-libnuma.ext-error.avail-check))
 		(asdf:test-op (asdf:test-op #:cl-libnuma.ext-error.test))))
+
+(asdf:defsystem :cl-libnuma.ext-error.avail-check
+  ;; :description ""
+  :license "LLGPL"
+  :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
+  :pathname "ext_error/avail_check"
+  :components
+  ((:file "avail-check")))
+
+(defmethod asdf:operate :after ((operate (eql 'asdf:load-op))
+				(component (eql :cl-libnuma.ext-error.avail-check))
+				&rest args &key &allow-other-keys)
+  (declare (ignore args))
+  (unless (uiop:symbol-call :cl-libnuma.ext-error.avail-check '#:ext-error-available?)
+    (warn "cl-libnuma's error handlers are unavailable.")))
 
 (asdf:defsystem :cl-libnuma.ext-error.test
   ;; :description ""

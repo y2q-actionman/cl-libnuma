@@ -131,8 +131,8 @@
 	   ,@args)
 	 (defun ,lisp-name (,@arg-syms)
 	   (handler-bind
-	       ;; FIXME: I don't what a kind of error is reported when
-	       ;; a function is not found.
+	       ;; FIXME: I don't know what a kind of error is reported
+	       ;; when a function is not found.
 	       ((error #'(lambda (,cond-gsym)
 			   (declare (ignorable ,cond-gsym))
 			   ,(if handler-function
