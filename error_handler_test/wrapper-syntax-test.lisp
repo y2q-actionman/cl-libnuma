@@ -33,7 +33,7 @@
 	(equal lisp-trampoline-function-name 'test-t-f-n)))
     t))
 
-;; TODO: add 'define-overriding-callback' test, especially for 'next-library' usage.
+;; TODO: add 'define-overriding-callback' test.
 
 (defun test-wrapper-syntax ()
   (and (test-parse-overriding-callback-name)

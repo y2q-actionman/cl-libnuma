@@ -6,10 +6,10 @@
   (:export
    #:test-wrapper-syntax))
 
-(defpackage :cl-libnuma.ext-error.test
+(defpackage :cl-libnuma.error-handler.test
   (:use :cl :cl-libnuma.test-util
 	:cl-libnuma
-	:cl-libnuma.ext-error)
+	:cl-libnuma.error-handler)
   (:import-from :cl-libnuma.test
 		#:if-numa-function-exists)
   (:import-from :cl-libnuma.wrapper-syntax.test

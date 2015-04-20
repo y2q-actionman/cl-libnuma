@@ -1,4 +1,4 @@
-(in-package :cl-libnuma.ext-error)
+(in-package :cl-libnuma.error-handler)
 
 (define-condition numa-error-condition (error)
   ((where :initarg :where :initform "" :type string :reader numa-error-condition-where))

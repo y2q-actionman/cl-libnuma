@@ -30,7 +30,7 @@
 
 - [X] Tests for basic bindings
 
-- [ ] Tests checking whether numa_error() was called or not.
+- [X] Tests checking whether numa_error() was called or not.
 
 - [X] malloc-pointer type?
 
@@ -43,7 +43,7 @@
 - [X] (Use cffi:foreign-funcall for finding alternative function in define-overriding-callback)
   Dropped. I eliminated facilities for calling a 'next' function.
 
-- [ ] Report a condition when numa_error() is called.
+- [X] Report a condition when numa_error() is called.
   numa-error -> serious-condition, numa-warn -> warning.
 
 

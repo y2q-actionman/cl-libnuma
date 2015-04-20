@@ -1,6 +1,6 @@
 # Abstract
 
-cl-libnuma is a binding for numa(3) interface based on cffi.
+cl-libnuma is a set of CFFI bindings for numa(3).
 
 (More details are coming soon..)
 

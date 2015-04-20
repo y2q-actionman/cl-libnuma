@@ -1,4 +1,4 @@
-(in-package :cl-libnuma.ext-error.wrapper)
+(in-package :cl-libnuma.error-handler.wrapper)
 
 (include "numa.h")
 

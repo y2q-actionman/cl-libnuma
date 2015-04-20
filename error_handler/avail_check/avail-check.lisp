@@ -1,13 +1,13 @@
 (in-package :cl-user)
 
-(defpackage :cl-libnuma.ext-error.avail-check
-  (:use :cl :cl-libnuma :cl-libnuma.ext-error)
+(defpackage :cl-libnuma.error-handler.avail-check
+  (:use :cl :cl-libnuma :cl-libnuma.error-handler)
   (:export
-   #:ext-error-available?))
+   #:error-handler-available?))
 
-(in-package :cl-libnuma.ext-error.avail-check)
+(in-package :cl-libnuma.error-handler.avail-check)
 
-(defun ext-error-available? ()
+(defun error-handler-available? ()
   (unwind-protect
        (progn
 	 (install-condition-callback)
@@ -15,7 +15,7 @@
 	     ((numa-warn-condition
 	       #'(lambda (c)
 		   (declare (ignore c))
-		   (return-from ext-error-available? t))))
+		   (return-from error-handler-available? t))))
 	   (numa-parse-nodestring "???"))
 	 nil)
     (uninstall-condition-callback)))

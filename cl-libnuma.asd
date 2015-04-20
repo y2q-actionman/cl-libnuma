@@ -6,7 +6,7 @@
   (asdf:load-system :cffi-grovel))
 
 (asdf:defsystem :cl-libnuma
-  ;; :description ""
+  :description "A set of CFFI bindings for numa(3)."
   :license "LLGPL"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cffi)
@@ -32,7 +32,7 @@
 All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.test
-  ;; :description ""
+  :description "Tests for cl-libnuma."
   :license "LLGPL"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cl-libnuma)
@@ -48,45 +48,47 @@ All functions without numa-avaliable are undefined.")))
   :perform (asdf:test-op (o s)
 			 (uiop:symbol-call '#:cl-libnuma.test '#:main)))
 
-(asdf:defsystem :cl-libnuma.ext-error
-  ;; :description ""
+
+(asdf:defsystem :cl-libnuma.error-handler
+  :description "cl-libnuma, a set of CFFI bindings for numa(3), with lispy error handlings. (experimental)"
   :license "LLGPL"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :components
-  ((:module "ext_error"
+  ((:module "error_handler"
     :serial t
     :components
     ((:file "package")
      (:file "wrapper-syntax")
-     (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-ext-error-wrapping")
+     (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-error-handler-wrapping")
      (:file "condition")
      )))
   :in-order-to ((asdf:load-op (asdf:load-op #:cl-libnuma) ; This must be loaded after!
-			      (asdf:load-op #:cl-libnuma.ext-error.avail-check))
-		(asdf:test-op (asdf:test-op #:cl-libnuma.ext-error.test))))
+			      (asdf:load-op #:cl-libnuma.error-handler.avail-check))
+		(asdf:test-op (asdf:test-op #:cl-libnuma.error-handler.test))))
 
-(asdf:defsystem :cl-libnuma.ext-error.avail-check
-  ;; :description ""
+(asdf:defsystem :cl-libnuma.error-handler.avail-check
+  :description "An availability check for cl-libnuma.error-handler."
   :license "LLGPL"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
-  :pathname "ext_error/avail_check"
+  :pathname "error_handler/avail_check"
   :components
   ((:file "avail-check")))
 
 (defmethod asdf:operate :after ((operate (eql 'asdf:load-op))
-				(component (eql :cl-libnuma.ext-error.avail-check))
+				(component (eql :cl-libnuma.error-handler.avail-check))
 				&rest args &key &allow-other-keys)
   (declare (ignore args))
-  (unless (uiop:symbol-call :cl-libnuma.ext-error.avail-check '#:ext-error-available?)
-    (warn "cl-libnuma's error handlers are unavailable.")))
+  (unless (uiop:symbol-call :cl-libnuma.error-handler.avail-check '#:error-handler-available?) ; TODO: naming
+    (warn "cl-libnuma's error handlers are unavailable. Please load cl-libnuma.error-handler at first.")))
 
-(asdf:defsystem :cl-libnuma.ext-error.test
-  ;; :description ""
+(asdf:defsystem :cl-libnuma.error-handler.test
+  :description "Tests for cl-libnuma.error-handler."
   :license "LLGPL"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
-  :depends-on (:cl-libnuma.ext-error :cl-libnuma.test)
+  :depends-on (:cl-libnuma.error-handler :cl-libnuma.error-handler.avail-check
+					 :cl-libnuma.test)
   :components
-  ((:module "ext_error_test"
+  ((:module "error_handler_test"
     :serial t
     :components
     ((:file "package")
@@ -94,4 +96,4 @@ All functions without numa-avaliable are undefined.")))
      (:file "binding")
      (:file "main"))))
   :perform (asdf:test-op (o s)
-			 (uiop:symbol-call '#:cl-libnuma.ext-error.test '#:main)))
+			 (uiop:symbol-call '#:cl-libnuma.error-handler.test '#:main)))

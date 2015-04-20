@@ -1,4 +1,4 @@
-(in-package :cl-libnuma.ext-error.test)
+(in-package :cl-libnuma.error-handler.test)
 
 (defun make-bad-node-mask ()
   (let ((mask (make-numa-bitmask (numa-num-possible-nodes))))
