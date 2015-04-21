@@ -80,10 +80,10 @@ All functions without numa-avaliable are undefined.")))
   ((:file "avail-check")))
 
 (defmethod asdf:operate :after ((operate (eql 'asdf:load-op))
-				(component (eql :cl-libnuma.error-handler.avail-check))
+				(component (eql :cl-libnuma.error-handler))
 				&rest args &key &allow-other-keys)
   (declare (ignore args))
-  (unless (uiop:symbol-call :cl-libnuma.error-handler.avail-check '#:error-handler-available?) ; TODO: naming
+  (unless (uiop:symbol-call :cl-libnuma.error-handler.avail-check '#:error-handler-available?)
     (warn "cl-libnuma's error handlers are unavailable. Please load cl-libnuma.error-handler at first.")))
 
 (asdf:defsystem :cl-libnuma.error-handler.test

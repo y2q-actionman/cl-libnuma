@@ -42,14 +42,14 @@
 				     (:cpu *numa-all-cpus-bitmask*)))
 	       (not (funcall func "??")))
 	     ;; using 0
-	     (when (<= 0 num-max)
+	     (when (< 0 num-max)
 	       (assert-progn
 		 (typep (funcall func "0") 'numa-bitmask)
 		 (typep (funcall func "!0") 'numa-bitmask)
 		 (typep (funcall func "+0") 'numa-bitmask)
 		 (typep (funcall func "0-0") 'numa-bitmask)))
 	     ;; using 0, 1
-	     (when (<= 1 num-max)
+	     (when (< 1 num-max)
 	       (assert-progn
 		 (typep (funcall func "0,1") 'numa-bitmask)
 		 (typep (funcall func "0-1") 'numa-bitmask)
@@ -371,6 +371,8 @@
 		      		       (,(nb 'clearbit) ,mask1 0) 0)))
 		      	(assert (= (1- filled-bits)
 		      		   (,(nb 'weight) ,mask1))))
+		      (assert (,(nb 'isbitset)
+		      		(,(nb 'setbit) ,mask1 0) 0))
 		      (assert (not (,(nb 'equal) ,mask1 ,mask2)))
 		      (if-numa-function-exists (,(copier) ,mask1 ,mask2)
 					       (assert (,(nb 'equal) ,mask1 ,mask2))))))))

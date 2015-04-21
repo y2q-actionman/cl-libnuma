@@ -17,10 +17,10 @@
        (progn
 	 (install-condition-callback)
 	 (handler-bind
-	     ((numa-warn-condition
+	     ((numa-error-condition
 	       #'(lambda (c)
 		   (declare (ignore c))
 		   (return-from error-handler-available? t))))
-	   (numa-parse-nodestring "???"))
+	   (numa-set-membind *numa-no-nodes-bitmask*))
 	 nil)
     (uninstall-condition-callback)))
