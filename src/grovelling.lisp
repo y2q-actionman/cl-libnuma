@@ -1,3 +1,8 @@
+;; Copyright (c) 2015 YOKOTA Yuki <y2q.actionman@gmail.com>
+;;
+;; This software is released under the MIT License.
+;; See the LICENSE file.
+
 (in-package :cl-libnuma.grovel)
 
 (include "limits.h")			; for CHAR_BIT

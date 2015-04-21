@@ -1,3 +1,8 @@
+;; Copyright (c) 2015 YOKOTA Yuki <y2q.actionman@gmail.com>
+;;
+;; This software is released under the MIT License.
+;; http://opensource.org/licenses/mit-license.php
+
 (in-package :cl-user)
 
 ;; needs: apt-get install libnuma-dev
@@ -7,7 +12,7 @@
 
 (asdf:defsystem :cl-libnuma
   :description "A set of CFFI bindings for numa(3)."
-  :license "LLGPL"
+  :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cffi)
   :components
@@ -33,7 +38,7 @@ All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.test
   :description "Tests for cl-libnuma."
-  :license "LLGPL"
+  :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cl-libnuma)
   :components
@@ -51,7 +56,7 @@ All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.error-handler
   :description "cl-libnuma, a set of CFFI bindings for numa(3), with lispy error handlings. (experimental)"
-  :license "LLGPL"
+  :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :components
   ((:module "error_handler"
@@ -68,7 +73,7 @@ All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.error-handler.avail-check
   :description "An availability check for cl-libnuma.error-handler."
-  :license "LLGPL"
+  :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :pathname "error_handler/avail_check"
   :components
@@ -83,7 +88,7 @@ All functions without numa-avaliable are undefined.")))
 
 (asdf:defsystem :cl-libnuma.error-handler.test
   :description "Tests for cl-libnuma.error-handler."
-  :license "LLGPL"
+  :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cl-libnuma.error-handler :cl-libnuma.error-handler.avail-check
 					 :cl-libnuma.test)

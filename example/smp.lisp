@@ -1,3 +1,10 @@
+;; Copyright (c) 2015 YOKOTA Yuki <y2q.actionman@gmail.com>
+;;
+;; This work is free. You can redistribute it and/or modify it under
+;; the terms of the Do What The Fuck You Want To Public License,
+;; Version 2, as published by Sam Hocevar. See http://www.wtfpl.net/
+;; for more details.
+
 (in-package :cl-user)
 
 (asdf:load-system :bordeaux-threads)
