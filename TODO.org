@@ -6,8 +6,9 @@
 
 - [X] checks libc-semantic return values. 
 
-- [ ] License.
+- [X] License.
   LLGPL?
+  -> I used the MIT license consequently.
 
 
 * enhancement
@@ -75,6 +76,9 @@
 
 - ~numa-alloc~ variations returns an alive pointer even if it calls ~numa_error()~.
   We must take care of this situation when handling ~numa-warn-condition~.
+
+- Talks about splitting lisp heaps by ~fork()~.
+
 
 * libnuma manpage bugs
 
