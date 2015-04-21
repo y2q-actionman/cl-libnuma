@@ -1,7 +1,7 @@
 ;; Copyright (c) 2015 YOKOTA Yuki <y2q.actionman@gmail.com>
 ;;
 ;; This software is released under the MIT License.
-;; http://opensource.org/licenses/mit-license.php
+;; See the LICENSE file.
 
 (in-package :cl-user)
 
