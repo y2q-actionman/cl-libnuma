@@ -50,12 +50,15 @@ To run tests, use `asdf:test-system`.
 ## Loads cl-libnuma.error-handling
 
 *cl-libnuma.error-handling* is a lispy error handling scheme built
-around *cl-libnuma*, but currently unstable.
-It must be loaded before *cl-libnuma*.
+around *cl-libnuma*.  This is experimental and currently
+unstable. This does not work on some platforms.
+It must be loaded before the *cl-libnuma* system.
 
 ```lisp
 (load "cl-libnuma.asd")
 (load "cl-libnuma-error-handler.asd")
+;; Please don't load :cl-libnuma before :cl-libnuma.error-handling. 
+;; :cl-libnuma.error-handling automatically loads it.
 (asdf:load-system :cl-libnuma.error-handling)
 ```
 
@@ -63,7 +66,6 @@ To run tests, try below.
 
 ```lisp
 (load "cl-libnuma-error-handler-test.asd")
-(asdf:test-system :cl-libnuma)
 (asdf:test-system :cl-libnuma.error-handling)
 ```
 

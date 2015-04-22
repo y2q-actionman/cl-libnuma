@@ -38,4 +38,4 @@
 				&rest args &key &allow-other-keys)
   (declare (ignore args))
   (unless (uiop:symbol-call :cl-libnuma.error-handler.avail-check '#:error-handler-available?)
-    (warn "cl-libnuma's error handlers are unavailable. Please load cl-libnuma.error-handler at first.")))
+    (warn "cl-libnuma-error-handler is unavailable. Please load cl-libnuma.error-handler before cl-libnuma.")))
