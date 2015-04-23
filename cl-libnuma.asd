@@ -23,6 +23,7 @@
      (:file "library")
      (cffi-grovel:grovel-file "grovelling")
      (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-wrapping")
+     (:file "types")
      (:file "binding"))))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.test)))) 
 
