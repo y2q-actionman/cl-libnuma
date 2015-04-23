@@ -1,6 +1,6 @@
 # Abstract
 
-*cl-libnuma* is a set of CFFI bindings for **numa(3)**.
+*cl-libnuma* is a set of CFFI bindings for [libnuma](http://oss.sgi.com/projects/libnuma/).
 
 *cl-libnuma* allows you following operations on Lisp:
 
@@ -22,12 +22,14 @@ the MIT License. See LICENSE file.
 
 ### Lisp Libraries
 
-- `asdf` for loading. For running tests, asdf 3 or later is required.
+- `asdf` for loading. For running tests, asdf3 or later is required.
 - `cffi` for FFI.
 
 ### C Libraries
 
-*libnuma* development package. You can get it with following ways:
+*libnuma development package* is required.
+
+You can get it with one of following ways:
 
 - `apt-get install libnuma-dev`
 - `yum install libnuma-devel`
@@ -47,11 +49,12 @@ To run tests, use `asdf:test-system`.
 (asdf:test-system :cl-libnuma)
 ```
 
-## Loads cl-libnuma.error-handler
+## Loads cl-libnuma.error-handler (optional)
 
 *cl-libnuma.error-handler* is a lispy error handling scheme built
 around *cl-libnuma*.  This is experimental and currently
 unstable. This does not work on some platforms.
+
 It must be loaded before the *cl-libnuma* system.
 
 ```lisp
