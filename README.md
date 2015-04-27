@@ -1,6 +1,6 @@
 # Abstract
 
-*cl-libnuma* is a set of CFFI bindings for [libnuma](http://oss.sgi.com/projects/libnuma/).
+*cl-libnuma* is a set of Common Lisp FFI bindings of [libnuma](http://oss.sgi.com/projects/libnuma/), based on CFFI.
 
 *cl-libnuma* allows you following operations on Lisp:
 
