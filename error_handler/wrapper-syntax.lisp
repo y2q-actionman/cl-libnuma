@@ -76,8 +76,9 @@
 	;; lisp code
 	(when variadic
 	  (warn "Overriding a varidic function is not straight-forward. Please use define-wrapper-syntax* carefully."))
-	(push `(progn
-		 (cl:defparameter ,lisp-callback-variable-name nil)
+	(push `(cffi-grovel::progn
+		 (cl:eval-when (:compile-toplevel :load-toplevel :execute)
+		   (cl:defparameter ,lisp-callback-variable-name nil))
 		 (cffi:defcvar (,lisp-trampoline-function-name ,c-trampoline-variable-name)
 		     :pointer)
 		 (cffi:defcallback ,lisp-trampoline-function-name ,rettype

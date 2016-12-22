@@ -11,6 +11,8 @@
 
 (defpackage :cl-libnuma.error-handler.wrapper
   (:use)
+  (:import-from :cl
+		#:eval-when #:defparameter #:nil #:setf #:progn #:funcall #:when)
   (:export
    #:*numa-error-callback*
    #:*numa-warn-callback*))
