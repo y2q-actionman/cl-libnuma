@@ -7,22 +7,20 @@
 
 ;; needs: apt-get install libnuma-dev
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (asdf:load-system :cffi-grovel))
-
 (asdf:defsystem :cl-libnuma
   :description "A set of CFFI bindings for numa(3)."
   :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:cffi)
+  :defsystem-depends-on (:cffi-grovel)
   :components
   ((:module "src"
     :serial t
     :components
     ((:file "package")
      (:file "library")
-     (cffi-grovel:grovel-file "grovelling")
-     (cffi-grovel:wrapper-file "wrapping" :soname "cl-libnuma-wrapping")
+     (:cffi-grovel-file "grovelling")
+     (:cffi-wrapper-file "wrapping" :soname "cl-libnuma-wrapping")
      (:file "types")
      (:file "binding"))))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-libnuma.test)))) 
